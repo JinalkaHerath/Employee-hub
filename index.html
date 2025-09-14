@@ -343,9 +343,6 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, get, set, push, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAapqyFbDAdqZGdC34pacC_0I_-laVpVm4",
@@ -357,9 +354,6 @@
             appId: "1:972932330869:web:0fe391334fa58634474f3c"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
         // Global variables
         let currentEmployee = null;
         let loginTime = null;
@@ -370,7 +364,32 @@
         window.logout = logout;
         window.addProductivity = addProductivity;
 
+        // Initialize Firebase when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load Firebase SDK dynamically
+            const firebaseScript = document.createElement('script');
+            firebaseScript.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+            firebaseScript.onload = function() {
+                const firebaseDBScript = document.createElement('script');
+                firebaseDBScript.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+                firebaseDBScript.onload = function() {
+                    // Initialize Firebase
+                    window.firebaseApp = firebase.initializeApp(firebaseConfig);
+                    window.firebaseDatabase = firebase.database();
+                    console.log('Firebase initialized');
+                };
+                document.head.appendChild(firebaseDBScript);
+            };
+            document.head.appendChild(firebaseScript);
+        });
+
         async function login() {
+            // Check if Firebase is loaded
+            if (!window.firebaseApp) {
+                showError('System is initializing. Please wait a moment and try again.');
+                return;
+            }
+            
             const employeeId = document.getElementById('employeeId').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorDiv = document.getElementById('loginError');
@@ -382,8 +401,8 @@
 
             try {
                 // Fetch employee data from Firebase
-                const employeeRef = ref(database, `employee_data/${employeeId}`);
-                const snapshot = await get(employeeRef);
+                const employeeRef = window.firebaseDatabase.ref(`employee_data/${employeeId}`);
+                const snapshot = await employeeRef.get();
                 
                 if (!snapshot.exists()) {
                     showError('Employee ID not found');
@@ -422,8 +441,8 @@
                     date: today
                 };
                 
-                const loginRef = ref(database, `attendance/${employeeId}/${today}`);
-                await set(loginRef, loginData);
+                const loginRef = window.firebaseDatabase.ref(`attendance/${employeeId}/${today}`);
+                await loginRef.set(loginData);
                 
                 console.log('Login time recorded:', loginData);
             } catch (error) {
@@ -482,8 +501,8 @@
                 };
 
                 // Store in Firebase
-                const productivityRef = ref(database, `productivity/${currentEmployee.id}/${today}/${recordId}`);
-                await set(productivityRef, productivityData);
+                const productivityRef = window.firebaseDatabase.ref(`productivity/${currentEmployee.id}/${today}/${recordId}`);
+                await productivityRef.set(productivityData);
 
                 showMessage('Productivity record added successfully!', 'success', messageDiv);
                 
@@ -508,8 +527,8 @@
             
             try {
                 // Fetch today's records from Firebase
-                const recordsRef = ref(database, `productivity/${currentEmployee.id}/${today}`);
-                const snapshot = await get(recordsRef);
+                const recordsRef = window.firebaseDatabase.ref(`productivity/${currentEmployee.id}/${today}`);
+                const snapshot = await recordsRef.get();
                 
                 if (snapshot.exists()) {
                     const records = snapshot.val();
