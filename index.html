@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Productivity System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+        }
+
+        .header {
+            background: #4B78AC;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+            padding: 40px;
+        }
+
+        .login-form {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4B78AC;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4B78AC;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #3a6088;
+        }
+
+        .dashboard {
+            display: none;
+            padding: 30px;
+        }
+
+        .employee-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card h3 {
+            color: #4B78AC;
+            margin-bottom: 10px;
+        }
+
+        .productivity-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .productivity-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .productivity-input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .add-btn {
+            padding: 12px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .add-btn:hover {
+            background: #218838;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .records-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .time-filter {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .export-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: #138496;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .records-table th,
+        .records-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .records-table th {
+            background: #4B78AC;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .records-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 5px;
+        }
+
+        .success-message {
+            color: #155724;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 5px;
+        }
+
+        .time-display {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #4B78AC;
+            margin: 20px 0;
+        }
+
+        .employee-selector {
+            margin-bottom: 20px;
+        }
+
+        .employee-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                display: block;
+            }
+            
+            .container {
+                margin: 0;
+                width: 100%;
+                border-radius: 15px;
+            }
+            
+            .login-container {
+                padding: 20px;
+            }
+            
+            .login-form {
+                padding: 25px;
+            }
+            
+            .dashboard {
+                padding: 20px;
+            }
+            
+            .employee-info {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            .productivity-section {
+                padding: 20px;
+            }
+            
+            .productivity-form {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .records-section {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .logout-btn {
+                width: 100%;
+                margin-bottom: 15px;
+                float: none;
+            }
+            
+            .time-display {
+                font-size: 1em;
+                margin: 15px 0;
+            }
+            
+            .info-card {
+                padding: 15px;
+            }
+            
+            .table-container {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+            }
+            
+            .records-table {
+                font-size: 14px;
+                min-width: 600px;
+            }
+            
+            .records-table th,
+            .records-table td {
+                padding: 8px 10px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-input, .time-filter {
+                min-width: 100%;
+            }
+            
+            /* Increase font size for Pieces Completed label */
+            .productivity-form label[for="piecesInput"] {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            
+            /* Increase font size for Pieces Completed input */
+            #piecesInput {
+                font-size: 18px;
+                padding: 15px;
+            }
+            
+            /* Increase font size for Task Type label */
+            .productivity-form label[for="taskTypeInput"] {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            
+            /* Increase font size for Task Type input */
+            #taskTypeInput {
+                font-size: 18px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-form {
+                padding: 20px;
+            }
+            
+            .form-group input {
+                padding: 12px;
+            }
+            
+            .login-btn {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.4em;
+            }
+            
+            .records-table {
+                font-size: 13px;
+            }
+            
+            .records-table th,
+            .records-table td {
+                padding: 6px 8px;
+            }
+            
+            /* Further increase font sizes on very small screens */
+            .productivity-form label[for="piecesInput"],
+            .productivity-form label[for="taskTypeInput"] {
+                font-size: 16px;
+            }
+            
+            #piecesInput,
+            #taskTypeInput {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Employee Productivity System</h1>
+            <p>Track employee productivity and performance</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginSection" class="login-container">
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Employee Login</h2>
+                <div class="form-group">
+                    <label for="employeeId">Employee ID:</label>
+                    <input type="text" id="employeeId" placeholder="Enter your Employee ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Enter your Password" required>
+                </div>
+                <button class="login-btn" onclick="login()">Login</button>
+                <div id="loginError" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboardSection" class="dashboard">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div class="time-display" id="currentTime"></div>
+            
+            <div class="employee-info">
+                <div class="info-card">
+                    <h3>Logged In Employee</h3>
+                    <p><strong>ID:</strong> <span id="empId"></span></p>
+                    <p><strong>Name:</strong> <span id="empName"></span></p>
+                    <p><strong>Email:</strong> <span id="empEmail"></span></p>
+                    <p><strong>Role:</strong> <span id="empRole"></span></p>
+                </div>
+                <div class="info-card">
+                    <h3>Today's Session</h3>
+                    <p><strong>Login Time:</strong> <span id="loginTime"></span></p>
+                    <p><strong>Date:</strong> <span id="currentDate"></span></p>
+                    <p><strong>Total Pieces:</strong> <span id="totalPieces">0</span></p>
+                </div>
+            </div>
+
+            <div class="productivity-section">
+                <h3 style="margin-bottom: 20px; color: #4B78AC;">Add Productivity Record</h3>
+                
+                <div class="employee-selector">
+                    <label for="employeeSelect">Select Employee:</label>
+                    <select id="employeeSelect" class="productivity-input">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                
+                <div class="productivity-form">
+                    <div>
+                        <label for="hourInput">Hour (0-23):</label>
+                        <input type="number" id="hourInput" class="productivity-input" min="0" max="23" placeholder="Hour">
+                    </div>
+                    <div>
+                        <label for="piecesInput">Pieces Completed:</label>
+                        <input type="number" id="piecesInput" class="productivity-input" min="0" placeholder="Number of pieces">
+                    </div>
+                    <div>
+                        <label for="taskTypeInput">Task Type:</label>
+                        <input type="text" id="taskTypeInput" class="productivity-input" placeholder="Enter task type">
+                    </div>
+                    <div>
+                        <button class="add-btn" onclick="addProductivity()">Add Record</button>
+                    </div>
+                </div>
+                <div id="productivityMessage" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="records-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="color: #4B78AC;">Today's Productivity Records</h3>
+                    <button class="export-btn" onclick="exportToExcel()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M5.884 6.68a.5.5 0 0 0-.772.63L8 11.154l2.888-3.844a.5.5 0 0 0-.772-.63L8.5 9.458V.5a.5.5 0 0 0-1 0v8.958L5.884 6.68z"/>
+                            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        </svg>
+                        Generate Excel Sheet
+                    </button>
+                </div>
+                
+                <!-- Search and Filter Section -->
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by employee name or task type...">
+                    <select id="timeFilter" class="time-filter">
+                        <option value="all">All Hours</option>
+                        <option value="0">12 AM - 1 AM</option>
+                        <option value="1">1 AM - 2 AM</option>
+                        <option value="2">2 AM - 3 AM</option>
+                        <option value="3">3 AM - 4 AM</option>
+                        <option value="4">4 AM - 5 AM</option>
+                        <option value="5">5 AM - 6 AM</option>
+                        <option value="6">6 AM - 7 AM</option>
+                        <option value="7">7 AM - 8 AM</option>
+                        <option value="8">8 AM - 9 AM</option>
+                        <option value="9">9 AM - 10 AM</option>
+                        <option value="10">10 AM - 11 AM</option>
+                        <option value="11">11 AM - 12 PM</option>
+                        <option value="12">12 PM - 1 PM</option>
+                        <option value="13">1 PM - 2 PM</option>
+                        <option value="14">2 PM - 3 PM</option>
+                        <option value="15">3 PM - 4 PM</option>
+                        <option value="16">4 PM - 5 PM</option>
+                        <option value="17">5 PM - 6 PM</option>
+                        <option value="18">6 PM - 7 PM</option>
+                        <option value="19">7 PM - 8 PM</option>
+                        <option value="20">8 PM - 9 PM</option>
+                        <option value="21">9 PM - 10 PM</option>
+                        <option value="22">10 PM - 11 PM</option>
+                        <option value="23">11 PM - 12 AM</option>
+                    </select>
+                </div>
+                
+                <div class="table-container">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Time</th>
+                                <th>Hour</th>
+                                <th>Task Type</th>
+                                <th>Pieces</th>
+                                <th>Recorded At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include SheetJS library for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, get, set, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAapqyFbDAdqZGdC34pacC_0I_-laVpVm4",
+            authDomain: "inventory-59b72.firebaseapp.com",
+            databaseURL:  "https://inventory-59b72-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "inventory-59b72",
+            storageBucket: "inventory-59b72.firebasestorage.app",
+            messagingSenderId: "972932330869",
+            appId: "1:972932330869:web:0fe391334fa58634474f3c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Global variables
+        let currentEmployee = null;
+        let loginTime = null;
+        let productivityRecords = {};
+        let lastLoginDate = null;
+        let allEmployees = {};
+        let allRecords = [];
+
+        // Make functions global
+        window.login = login;
+        window.logout = logout;
+        window.addProductivity = addProductivity;
+        window.exportToExcel = exportToExcel;
+
+        async function login() {
+            const employeeId = document.getElementById('employeeId').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            if (!employeeId || !password) {
+                showError('Please enter both Employee ID and Password');
+                return;
+            }
+
+            try {
+                // Query Firebase for the employee
+                const employeeRef = ref(database, `employee_data/${employeeId}`);
+                const snapshot = await get(employeeRef);
+                
+                if (!snapshot.exists()) {
+                    showError('Employee ID not found');
+                    return;
+                }
+
+                const employee = snapshot.val();
+
+                if (employee.password !== password) {
+                    showError('Invalid password');
+                    return;
+                }
+
+                // Successful login
+                currentEmployee = { id: employeeId, ...employee };
+                
+                // Get today's date
+                const today = new Date().toISOString().split('T')[0];
+                
+                // ALWAYS set current time as login time for new session
+                loginTime = new Date();
+                
+                // Check if there's an existing attendance record for today
+                const attendanceRef = ref(database, `attendance/${employeeId}/${today}`);
+                const attendanceSnapshot = await get(attendanceRef);
+                
+                if (attendanceSnapshot.exists()) {
+                    // Update existing record with new login time
+                    const existingData = attendanceSnapshot.val();
+                    const updatedData = {
+                        ...existingData,
+                        lastLoginTime: loginTime.toISOString(),
+                        loginCount: (existingData.loginCount || 1) + 1
+                    };
+                    await set(attendanceRef, updatedData);
+                } else {
+                    // Create new attendance record for today
+                    await recordLoginTime(employeeId, loginTime);
+                }
+                
+                lastLoginDate = today;
+                
+                // Load all employees for the dropdown
+                await loadAllEmployees();
+                
+                // Clear previous day's productivity records
+                clearProductivityRecords();
+                
+                showDashboard();
+                loadTodayRecords();
+                
+            } catch (error) {
+                showError('Login failed. Please try again.');
+                console.error('Login error:', error);
+            }
+        }
+
+        async function loadAllEmployees() {
+            try {
+                const employeesRef = ref(database, 'employee_data');
+                const snapshot = await get(employeesRef);
+                
+                if (snapshot.exists()) {
+                    allEmployees = snapshot.val();
+                    
+                    // Populate the employee dropdown
+                    const employeeSelect = document.getElementById('employeeSelect');
+                    employeeSelect.innerHTML = '';
+                    
+                    // Add an option for each employee
+                    Object.entries(allEmployees).forEach(([id, employee]) => {
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = `${employee.name} (${id})`;
+                        employeeSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            }
+        }
+
+        async function recordLoginTime(employeeId, time) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const loginData = {
+                    employeeId: employeeId,
+                    loginTime: time.toISOString(),
+                    lastLoginTime: time.toISOString(),
+                    date: today,
+                    loginCount: 1
+                };
+                
+                const loginRef = ref(database, `attendance/${employeeId}/${today}`);
+                await set(loginRef, loginData);
+                
+                console.log('Login time recorded:', loginData);
+            } catch (error) {
+                console.error('Error recording login time:', error);
+            }
+        }
+
+        function clearProductivityRecords() {
+            // Clear local productivity records
+            productivityRecords = {};
+            allRecords = [];
+            
+            // Clear the table
+            const tableBody = document.getElementById('recordsTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+            }
+            
+            // Reset total pieces
+            const totalPiecesElement = document.getElementById('totalPieces');
+            if (totalPiecesElement) {
+                totalPiecesElement.textContent = '0';
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            
+            // Populate employee info
+            document.getElementById('empId').textContent = currentEmployee.id;
+            document.getElementById('empName').textContent = currentEmployee.name;
+            document.getElementById('empEmail').textContent = currentEmployee.email;
+            document.getElementById('empRole').textContent = currentEmployee.usertype;
+            document.getElementById('loginTime').textContent = loginTime.toLocaleTimeString();
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+            
+            // Set current hour
+            document.getElementById('hourInput').value = new Date().getHours();
+            
+            // Start time display
+            updateTimeDisplay();
+            setInterval(updateTimeDisplay, 1000);
+            
+            // Add event listeners for search and filter
+            document.getElementById('searchInput').addEventListener('input', filterRecords);
+            document.getElementById('timeFilter').addEventListener('change', filterRecords);
+        }
+
+        function updateTimeDisplay() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                `Current Time: ${now.toLocaleString()}`;
+                
+            // Check if it's a new day
+            const today = new Date().toISOString().split('T')[0];
+            if (lastLoginDate && today !== lastLoginDate) {
+                // It's a new day, clear records and update date
+                clearProductivityRecords();
+                lastLoginDate = today;
+                
+                // Update the displayed date
+                document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+                
+                // Optionally show a notification
+                alert("New day detected! Records have been cleared for today's session.");
+            }
+        }
+
+        async function addProductivity() {
+            const selectedEmployeeId = document.getElementById('employeeSelect').value;
+            const hour = parseInt(document.getElementById('hourInput').value);
+            const pieces = parseInt(document.getElementById('piecesInput').value);
+            const taskType = document.getElementById('taskTypeInput').value.trim();
+            const messageDiv = document.getElementById('productivityMessage');
+
+            if (!selectedEmployeeId) {
+                showMessage('Please select an employee', 'error', messageDiv);
+                return;
+            }
+
+            if (isNaN(hour) || isNaN(pieces) || hour < 0 || hour > 23 || pieces < 0) {
+                showMessage('Please enter valid hour (0-23) and pieces count', 'error', messageDiv);
+                return;
+            }
+            
+            if (!taskType) {
+                showMessage('Please enter a task type', 'error', messageDiv);
+                return;
+            }
+
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const recordId = Date.now().toString();
+                
+                const productivityData = {
+                    employeeId: selectedEmployeeId,
+                    employeeName: allEmployees[selectedEmployeeId].name,
+                    date: today,
+                    hour: hour,
+                    pieces: pieces,
+                    taskType: taskType,
+                    recordedAt: new Date().toISOString(),
+                    recordedBy: currentEmployee.id
+                };
+
+                // Store in Firebase
+                const productivityRef = ref(database, `productivity/${selectedEmployeeId}/${today}/${recordId}`);
+                await set(productivityRef, productivityData);
+
+                showMessage('Productivity record added successfully!', 'success', messageDiv);
+                
+                // Clear inputs
+                document.getElementById('piecesInput').value = '';
+                document.getElementById('taskTypeInput').value = '';
+                
+                // Reload records
+                loadTodayRecords();
+                
+            } catch (error) {
+                showMessage('Error adding productivity record', 'error', messageDiv);
+                console.error('Error:', error);
+            }
+        }
+
+        function loadTodayRecords() {
+            const today = new Date().toISOString().split('T')[0];
+            const tableBody = document.getElementById('recordsTableBody');
+            
+            // Clear table first
+            tableBody.innerHTML = '';
+            
+            let totalPieces = 0;
+            
+            // Load from Firebase - now loading all employees' records for today
+            const productivityRef = ref(database, `productivity`);
+            onValue(productivityRef, (snapshot) => {
+                const data = snapshot.val();
+                
+                // Clear table again to prevent duplicates
+                tableBody.innerHTML = '';
+                totalPieces = 0;
+                allRecords = [];
+                
+                if (data) {
+                    // Store in local records
+                    productivityRecords = data;
+                    
+                    // Collect all records for today
+                    Object.entries(data).forEach(([employeeId, employeeData]) => {
+                        if (employeeData[today]) {
+                            Object.entries(employeeData[today]).forEach(([recordId, record]) => {
+                                allRecords.push({
+                                    employeeId: employeeId,
+                                    employeeName: record.employeeName,
+                                    hour: record.hour,
+                                    pieces: record.pieces,
+                                    taskType: record.taskType,
+                                    recordedAt: record.recordedAt
+                                });
+                                
+                                totalPieces += record.pieces;
+                            });
+                        }
+                    });
+                    
+                    // Sort records by time (newest first)
+                    allRecords.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+                    
+                    // Update table with all records initially
+                    updateTableWithFilteredRecords();
+                    
+                    if (allRecords.length === 0) {
+                        const row = tableBody.insertRow();
+                        row.innerHTML = '<td colspan="6" style="text-align: center; color: #666;">No records for today</td>';
+                    }
+                } else {
+                    // No records found
+                    const row = tableBody.insertRow();
+                    row.innerHTML = '<td colspan="6" style="text-align: center; color: #666;">No records for today</td>';
+                }
+                
+                document.getElementById('totalPieces').textContent = totalPieces;
+            }, {
+                onlyOnce: true
+            });
+        }
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const timeFilter = document.getElementById('timeFilter').value;
+            
+            updateTableWithFilteredRecords(searchTerm, timeFilter);
+        }
+
+        function updateTableWithFilteredRecords(searchTerm = '', timeFilter = 'all') {
+            const tableBody = document.getElementById('recordsTableBody');
+            tableBody.innerHTML = '';
+            
+            let filteredRecords = allRecords;
+            
+            // Apply search filter
+            if (searchTerm) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.employeeName.toLowerCase().includes(searchTerm) || 
+                    record.taskType.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply time filter
+            if (timeFilter !== 'all') {
+                const hourFilter = parseInt(timeFilter);
+                filteredRecords = filteredRecords.filter(record => record.hour === hourFilter);
+            }
+            
+            // Update table with filtered records
+            if (filteredRecords.length > 0) {
+                filteredRecords.forEach(record => {
+                    const row = tableBody.insertRow();
+                    const recordTime = new Date(record.recordedAt);
+                    
+                    row.innerHTML = `
+                        <td>${record.employeeName}</td>
+                        <td>${recordTime.toLocaleTimeString()}</td>
+                        <td>${record.hour}:00</td>
+                        <td>${record.taskType}</td>
+                        <td>${record.pieces}</td>
+                        <td>${recordTime.toLocaleString()}</td>
+                    `;
+                });
+            } else {
+                const row = tableBody.insertRow();
+                row.innerHTML = '<td colspan="6" style="text-align: center; color: #666;">No matching records found</td>';
+            }
+        }
+
+        function exportToExcel() {
+            try {
+                // Get current date for filename
+                const today = new Date();
+                const dateString = today.toISOString().split('T')[0];
+                
+                // Prepare data for Excel
+                const excelData = [
+                    ['Employee Name', 'Time', 'Hour', 'Task Type', 'Pieces', 'Recorded At']
+                ];
+                
+                // Add all records to the data array
+                allRecords.forEach(record => {
+                    const recordTime = new Date(record.recordedAt);
+                    excelData.push([
+                        record.employeeName,
+                        recordTime.toLocaleTimeString(),
+                        `${record.hour}:00`,
+                        record.taskType,
+                        record.pieces,
+                        recordTime.toLocaleString()
+                    ]);
+                });
+                
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Productivity Records");
+                
+                // Generate Excel file and trigger download
+                XLSX.writeFile(wb, `Productivity_Records_${dateString}.xlsx`);
+                
+                // Show success message
+                const messageDiv = document.getElementById('productivityMessage');
+                showMessage('Excel file generated successfully!', 'success', messageDiv);
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                const messageDiv = document.getElementById('productivityMessage');
+                showMessage('Error generating Excel file', 'error', messageDiv);
+            }
+        }
+
+        function logout() {
+            currentEmployee = null;
+            loginTime = null;
+            lastLoginDate = null;
+            allEmployees = {};
+            allRecords = [];
+            
+            // Clear records
+            clearProductivityRecords();
+            
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('employeeId').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showMessage(message, type, element) {
+            element.textContent = message;
+            element.className = type === 'error' ? 'error-message' : 'success-message';
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            const today = new Date().toISOString().split('T')[0];
+            lastLoginDate = today;
+            clearProductivityRecords();
+        });
+    </script>
+</body>
+</html>
