@@ -323,6 +323,23 @@
             background: #138496;
         }
 
+        /* Delete button styles */
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
         /* Bulk Entry Modal Styles */
         .modal-overlay {
             display: none;
@@ -554,6 +571,25 @@
             .add-row-btn, .submit-bulk-btn {
                 width: 100%;
             }
+            
+            /* Mobile-specific table adjustments */
+            .records-table th:nth-child(6),
+            .records-table td:nth-child(6),
+            .records-table th:nth-child(7),
+            .records-table td:nth-child(7),
+            .records-table th:nth-child(8),
+            .records-table td:nth-child(8) {
+                display: none;
+            }
+            
+            .records-table th:nth-child(9),
+            .records-table td:nth-child(9) {
+                display: none;
+            }
+            
+            .records-table {
+                min-width: 600px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -584,6 +620,18 @@
             .records-table th,
             .records-table td {
                 padding: 6px 8px;
+            }
+            
+            /* Further simplify table for very small screens */
+            .records-table th:nth-child(4),
+            .records-table td:nth-child(4),
+            .records-table th:nth-child(5),
+            .records-table td:nth-child(5) {
+                display: none;
+            }
+            
+            .records-table {
+                min-width: 400px;
             }
         }
     </style>
@@ -728,6 +776,7 @@
                                 <th>Line In</th>
                                 <th>Line Out</th>
                                 <th>Recorded At</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="recordsTableBody">
@@ -807,6 +856,7 @@
         window.addBulkEntryRow = addBulkEntryRow;
         window.removeBulkEntryRow = removeBulkEntryRow;
         window.submitBulkEntries = submitBulkEntries;
+        window.deleteRecord = deleteRecord;
 
         async function login() {
             const employeeId = document.getElementById('employeeId').value.trim();
@@ -1083,8 +1133,9 @@
                         Object.entries(employeeData).forEach(([date, dateData]) => {
                             Object.entries(dateData).forEach(([recordId, record]) => {
                                 allRecords.push({
-                                    date: date,
+                                    recordId: recordId,
                                     employeeId: employeeId,
+                                    date: date,
                                     employeeName: record.employeeName,
                                     hour: record.hour,
                                     pieces: record.pieces || 0,
@@ -1109,110 +1160,106 @@
                         return new Date(b.recordedAt) - new Date(a.recordedAt);
                     });
                     
-                    // Populate date filter
-                    populateDateFilter();
+                    // Populate the table
+                    allRecords.forEach(record => {
+                        const row = document.createElement('tr');
+                        
+                        // Format time for display
+                        const hourDisplay = record.hour < 12 ? 
+                            `${record.hour}:00 AM` : 
+                            `${record.hour === 12 ? 12 : record.hour - 12}:00 PM`;
+                        
+                        // Format recorded time
+                        const recordedTime = new Date(record.recordedAt).toLocaleString();
+                        
+                        row.innerHTML = `
+                            <td>${record.date}</td>
+                            <td>${record.employeeName}</td>
+                            <td>${hourDisplay}</td>
+                            <td>${record.hour}</td>
+                            <td>${record.taskType}</td>
+                            <td>${record.pieces}</td>
+                            <td>${record.lineIn}</td>
+                            <td>${record.lineOut}</td>
+                            <td>${recordedTime}</td>
+                            <td><button class="delete-btn" onclick="deleteRecord('${record.employeeId}', '${record.date}', '${record.recordId}')">Delete</button></td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
                     
-                    // Update table with all records initially
-                    updateTableWithFilteredRecords();
+                    // Update total pieces
+                    document.getElementById('totalPieces').textContent = totalPieces;
                     
-                    if (allRecords.length === 0) {
-                        const row = tableBody.insertRow();
-                        row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No records found</td>';
-                    }
-                } else {
-                    // No records found
-                    const row = tableBody.insertRow();
-                    row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No records found</td>';
+                    // Update date filter
+                    updateDateFilter();
+                    
+                    // Apply any active filters
+                    filterRecords();
                 }
-                
-                document.getElementById('totalPieces').textContent = totalPieces;
-            }, {
-                onlyOnce: true
             });
         }
 
-        function populateDateFilter() {
-            const dateFilter = document.getElementById('dateFilter');
-            dateFilter.innerHTML = '<option value="all">All Dates</option>';
+        async function deleteRecord(employeeId, date, recordId) {
+            if (!confirm('Are you sure you want to delete this record?')) {
+                return;
+            }
             
-            // Get unique dates from allRecords
-            const uniqueDates = [...new Set(allRecords.map(record => record.date))];
+            try {
+                const recordRef = ref(database, `productivity/${employeeId}/${date}/${recordId}`);
+                await remove(recordRef);
+                
+                // Show success message
+                const messageDiv = document.getElementById('productivityMessage');
+                showMessage('Record deleted successfully!', 'success', messageDiv);
+                
+                // Records will automatically reload due to the onValue listener
+            } catch (error) {
+                console.error('Error deleting record:', error);
+                const messageDiv = document.getElementById('productivityMessage');
+                showMessage('Error deleting record', 'error', messageDiv);
+            }
+        }
+
+        function updateDateFilter() {
+            const dateFilter = document.getElementById('dateFilter');
+            const currentDates = [...new Set(allRecords.map(record => record.date))];
             
             // Sort dates in descending order (newest first)
-            uniqueDates.sort((a, b) => b.localeCompare(a));
+            currentDates.sort((a, b) => b.localeCompare(a));
             
-            // Add options for each date
-            uniqueDates.forEach(date => {
+            // Clear existing options except "All Dates"
+            dateFilter.innerHTML = '<option value="all">All Dates</option>';
+            
+            // Add date options
+            currentDates.forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
-                option.textContent = formatDateForDisplay(date);
+                option.textContent = date;
                 dateFilter.appendChild(option);
-            });
-        }
-
-        function formatDateForDisplay(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
             });
         }
 
         function filterRecords() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const dateFilter = document.getElementById('dateFilter').value;
             const timeFilter = document.getElementById('timeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
             
-            updateTableWithFilteredRecords(searchTerm, dateFilter, timeFilter);
-        }
-
-        function updateTableWithFilteredRecords(searchTerm = '', dateFilter = 'all', timeFilter = 'all') {
             const tableBody = document.getElementById('recordsTableBody');
-            tableBody.innerHTML = '';
+            const rows = tableBody.getElementsByTagName('tr');
             
-            let filteredRecords = allRecords;
-            
-            // Apply search filter
-            if (searchTerm) {
-                filteredRecords = filteredRecords.filter(record => 
-                    record.employeeName.toLowerCase().includes(searchTerm) || 
-                    record.taskType.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // Apply date filter
-            if (dateFilter !== 'all') {
-                filteredRecords = filteredRecords.filter(record => record.date === dateFilter);
-            }
-            
-            // Apply time filter
-            if (timeFilter !== 'all') {
-                const hourFilter = parseInt(timeFilter);
-                filteredRecords = filteredRecords.filter(record => record.hour === hourFilter);
-            }
-            
-            // Update table with filtered records
-            if (filteredRecords.length > 0) {
-                filteredRecords.forEach(record => {
-                    const row = tableBody.insertRow();
-                    const recordTime = new Date(record.recordedAt);
-                    
-                    row.innerHTML = `
-                        <td>${formatDateForDisplay(record.date)}</td>
-                        <td>${record.employeeName}</td>
-                        <td>${recordTime.toLocaleTimeString()}</td>
-                        <td>${record.hour}:00</td>
-                        <td>${record.taskType}</td>
-                        <td>${record.pieces}</td>
-                        <td>${record.lineIn}</td>
-                        <td>${record.lineOut}</td>
-                        <td>${recordTime.toLocaleString()}</td>
-                    `;
-                });
-            } else {
-                const row = tableBody.insertRow();
-                row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No matching records found</td>';
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                const employeeName = cells[1].textContent.toLowerCase();
+                const taskType = cells[4].textContent.toLowerCase();
+                const hour = cells[3].textContent;
+                const date = cells[0].textContent;
+                
+                const matchesSearch = employeeName.includes(searchTerm) || taskType.includes(searchTerm);
+                const matchesTime = timeFilter === 'all' || hour === timeFilter;
+                const matchesDate = dateFilter === 'all' || date === dateFilter;
+                
+                row.style.display = matchesSearch && matchesTime && matchesDate ? '' : 'none';
             }
         }
 
@@ -1220,179 +1267,128 @@
             // Create CSV content
             let csvContent = "Date,Employee Name,Time,Hour,Task Type,Pieces,Line In,Line Out,Recorded At\n";
             
-            allRecords.forEach(record => {
-                const recordTime = new Date(record.recordedAt);
-                csvContent += `"${formatDateForDisplay(record.date)}","${record.employeeName}","${recordTime.toLocaleTimeString()}","${record.hour}:00","${record.taskType}","${record.pieces}","${record.lineIn}","${record.lineOut}","${recordTime.toLocaleString()}"\n`;
+            // Get filtered records
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const timeFilter = document.getElementById('timeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const filteredRecords = allRecords.filter(record => {
+                const matchesSearch = 
+                    record.employeeName.toLowerCase().includes(searchTerm) || 
+                    record.taskType.toLowerCase().includes(searchTerm);
+                const matchesTime = timeFilter === 'all' || record.hour.toString() === timeFilter;
+                const matchesDate = dateFilter === 'all' || record.date === dateFilter;
+                
+                return matchesSearch && matchesTime && matchesDate;
             });
             
-            // Create download link
-            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `productivity_records_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
+            // Add each record to CSV
+            filteredRecords.forEach(record => {
+                const hourDisplay = record.hour < 12 ? 
+                    `${record.hour}:00 AM` : 
+                    `${record.hour === 12 ? 12 : record.hour - 12}:00 PM`;
+                
+                const recordedAt = new Date(record.recordedAt).toLocaleString();
+                
+                csvContent += `"${record.date}","${record.employeeName}","${hourDisplay}","${record.hour}","${record.taskType}","${record.pieces}","${record.lineIn}","${record.lineOut}","${recordedAt}"\n`;
+            });
             
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            // Show success message
-            const messageDiv = document.getElementById('productivityMessage');
-            showMessage('Data exported successfully!', 'success', messageDiv);
+            // Create and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `productivity_records_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
         }
 
-        function logout() {
-            currentEmployee = null;
-            loginTime = null;
-            lastLoginDate = null;
-            allEmployees = {};
-            allRecords = [];
-            
-            // Clear records
-            clearProductivityRecords();
-            
-            document.getElementById('loginSection').style.display = 'flex';
-            document.getElementById('dashboardSection').style.display = 'none';
-            document.getElementById('employeeId').value = '';
-            document.getElementById('password').value = '';
-        }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
-
-        function showMessage(message, type, element) {
-            element.textContent = message;
-            element.className = type === 'error' ? 'error-message' : 'success-message';
-            element.style.display = 'block';
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
-        }
-
-        // Bulk Entry Functions
         function openBulkEntryModal() {
-            const modal = document.getElementById('bulkEntryModal');
-            modal.style.display = 'flex';
+            document.getElementById('bulkEntryModal').style.display = 'flex';
+            document.getElementById('bulkEntryRows').innerHTML = '';
             
-            // Clear existing rows and add one initial row
-            const rowsContainer = document.getElementById('bulkEntryRows');
-            rowsContainer.innerHTML = '';
+            // Add initial row
             addBulkEntryRow();
         }
 
         function closeBulkEntryModal() {
-            const modal = document.getElementById('bulkEntryModal');
-            modal.style.display = 'none';
-            
-            // Clear the message
-            const messageDiv = document.getElementById('bulkEntryMessage');
-            messageDiv.style.display = 'none';
+            document.getElementById('bulkEntryModal').style.display = 'none';
+            document.getElementById('bulkEntryMessage').innerHTML = '';
         }
 
         function addBulkEntryRow() {
             const rowsContainer = document.getElementById('bulkEntryRows');
-            const rowId = Date.now().toString();
             
             const row = document.createElement('div');
             row.className = 'bulk-entry-row';
-            row.id = `bulk-row-${rowId}`;
             
             // Create employee dropdown
-            let employeeOptions = '';
+            const employeeSelect = document.createElement('select');
+            employeeSelect.className = 'productivity-input';
+            
+            // Add options
             Object.entries(allEmployees).forEach(([id, employee]) => {
-                employeeOptions += `<option value="${id}">${employee.name} (${id})</option>`;
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${employee.name} (${id})`;
+                employeeSelect.appendChild(option);
             });
             
-            // Get today's date for default value
+            // Set current date
             const today = new Date().toISOString().split('T')[0];
             
             row.innerHTML = `
-                <div>
-                    <select class="productivity-input bulk-employee-select">
-                        <option value="">Select Employee</option>
-                        ${employeeOptions}
-                    </select>
-                </div>
-                <div>
-                    <input type="date" class="productivity-input bulk-date-input" value="${today}">
-                </div>
-                <div>
-                    <input type="number" class="productivity-input bulk-hour-input" min="0" max="23" placeholder="Hour" value="${new Date().getHours()}">
-                </div>
-                <div>
-                    <input type="number" class="productivity-input bulk-pieces-input" min="0" placeholder="Pieces">
-                </div>
-                <div>
-                    <input type="text" class="productivity-input bulk-task-type-input" placeholder="Task Type">
-                </div>
-                <div>
-                    <input type="number" class="productivity-input bulk-line-in-input" min="0" placeholder="Line In">
-                </div>
-                <div>
-                    <input type="number" class="productivity-input bulk-line-out-input" min="0" placeholder="Line Out">
-                </div>
-                <div>
-                    <button class="remove-row-btn" onclick="removeBulkEntryRow('${rowId}')">Remove</button>
-                </div>
+                <div>${employeeSelect.outerHTML}</div>
+                <div><input type="date" class="productivity-input" value="${today}"></div>
+                <div><input type="number" class="productivity-input" min="0" max="23" placeholder="Hour" value="${new Date().getHours()}"></div>
+                <div><input type="number" class="productivity-input" min="0" placeholder="Pieces"></div>
+                <div><input type="text" class="productivity-input" placeholder="Task Type"></div>
+                <div><input type="number" class="productivity-input" min="0" placeholder="Line In"></div>
+                <div><input type="number" class="productivity-input" min="0" placeholder="Line Out"></div>
+                <div><button class="remove-row-btn" onclick="removeBulkEntryRow(this)">Remove</button></div>
             `;
             
             rowsContainer.appendChild(row);
         }
 
-        function removeBulkEntryRow(rowId) {
-            const row = document.getElementById(`bulk-row-${rowId}`);
-            if (row) {
-                row.remove();
-            }
+        function removeBulkEntryRow(button) {
+            const row = button.closest('.bulk-entry-row');
+            row.remove();
         }
 
         async function submitBulkEntries() {
-            const rowsContainer = document.getElementById('bulkEntryRows');
-            const rows = rowsContainer.querySelectorAll('.bulk-entry-row');
+            const rows = document.querySelectorAll('#bulkEntryRows .bulk-entry-row');
             const messageDiv = document.getElementById('bulkEntryMessage');
             
             if (rows.length === 0) {
-                showMessage('No entries to submit', 'error', messageDiv);
+                showMessage('Please add at least one row', 'error', messageDiv);
                 return;
             }
             
-            let validEntries = 0;
-            let errorEntries = 0;
+            let successCount = 0;
+            let errorCount = 0;
             
-            // Process each row
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
+            for (let row of rows) {
+                const inputs = row.querySelectorAll('input, select');
                 
-                const employeeSelect = row.querySelector('.bulk-employee-select');
-                const dateInput = row.querySelector('.bulk-date-input');
-                const hourInput = row.querySelector('.bulk-hour-input');
-                const piecesInput = row.querySelector('.bulk-pieces-input');
-                const taskTypeInput = row.querySelector('.bulk-task-type-input');
-                const lineInInput = row.querySelector('.bulk-line-in-input');
-                const lineOutInput = row.querySelector('.bulk-line-out-input');
-                
-                const employeeId = employeeSelect.value;
-                const date = dateInput.value;
-                const hour = parseInt(hourInput.value);
-                const pieces = parseInt(piecesInput.value) || 0;
-                const taskType = taskTypeInput.value.trim();
-                const lineIn = parseInt(lineInInput.value) || 0;
-                const lineOut = parseInt(lineOutInput.value) || 0;
+                const employeeId = inputs[0].value;
+                const date = inputs[1].value;
+                const hour = parseInt(inputs[2].value);
+                const pieces = parseInt(inputs[3].value) || 0;
+                const taskType = inputs[4].value.trim();
+                const lineIn = parseInt(inputs[5].value) || 0;
+                const lineOut = parseInt(inputs[6].value) || 0;
                 
                 // Validate required fields
                 if (!employeeId || !date || isNaN(hour) || hour < 0 || hour > 23 || !taskType) {
-                    errorEntries++;
+                    errorCount++;
                     continue;
                 }
                 
                 try {
-                    const recordId = Date.now().toString() + i;
+                    const recordId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
                     
                     const productivityData = {
                         employeeId: employeeId,
@@ -1411,33 +1407,75 @@
                     const productivityRef = ref(database, `productivity/${employeeId}/${date}/${recordId}`);
                     await set(productivityRef, productivityData);
                     
-                    validEntries++;
+                    successCount++;
                 } catch (error) {
-                    errorEntries++;
+                    errorCount++;
                     console.error('Error adding bulk record:', error);
                 }
             }
             
-            // Show result message
-            if (validEntries > 0) {
-                showMessage(`Successfully added ${validEntries} records${errorEntries > 0 ? `, ${errorEntries} failed` : ''}`, 'success', messageDiv);
+            if (successCount > 0) {
+                showMessage(`Successfully added ${successCount} records${errorCount > 0 ? `, ${errorCount} failed` : ''}`, 'success', messageDiv);
                 
-                // Clear the form after successful submission
-                rowsContainer.innerHTML = '';
-                addBulkEntryRow();
-                
-                // Reload records to show the new entries
-                loadAllRecords();
+                // Close modal after a delay if all were successful
+                if (errorCount === 0) {
+                    setTimeout(() => {
+                        closeBulkEntryModal();
+                        loadAllRecords();
+                    }, 2000);
+                } else {
+                    loadAllRecords();
+                }
             } else {
-                showMessage('No valid records were added. Please check your inputs.', 'error', messageDiv);
+                showMessage('Failed to add any records. Please check your inputs.', 'error', messageDiv);
             }
         }
 
-        // Initialize on page load
-        window.addEventListener('load', function() {
+        function logout() {
+            currentEmployee = null;
+            loginTime = null;
+            productivityRecords = {};
+            allRecords = [];
+            
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('dashboardSection').style.display = 'none';
+            
+            // Clear login form
+            document.getElementById('employeeId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showMessage(message, type, container) {
+            container.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${message}</div>`;
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date and hour
             const today = new Date().toISOString().split('T')[0];
-            lastLoginDate = today;
-            clearProductivityRecords();
+            document.getElementById('dateInput').value = today;
+            document.getElementById('hourInput').value = new Date().getHours();
+            
+            // Add event listener for Enter key in login form
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
         });
     </script>
 </body>
