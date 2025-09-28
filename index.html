@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Productivity System</title>
     <style>
+        /* All existing CSS styles remain the same */
         * {
             margin: 0;
             padding: 0;
@@ -167,6 +168,23 @@
             background: #218838;
         }
 
+        .bulk-entry-btn {
+            padding: 12px 25px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .bulk-entry-btn:hover {
+            background: #138496;
+        }
+
         .logout-btn {
             background: #dc3545;
             color: white;
@@ -206,6 +224,14 @@
         }
 
         .time-filter {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .date-filter {
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
@@ -297,6 +323,121 @@
             background: #138496;
         }
 
+        /* Bulk Entry Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bulk-entry-modal {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .bulk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .bulk-header h2 {
+            color: #4B78AC;
+        }
+
+        .close-modal {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .bulk-form-container {
+            margin-bottom: 20px;
+        }
+
+        .bulk-entry-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .bulk-entry-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .bulk-entry-row:last-child {
+            border-bottom: none;
+        }
+
+        .bulk-entry-row-header {
+            font-weight: bold;
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .remove-row-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .bulk-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .add-row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .submit-bulk-btn {
+            background: #4B78AC;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
@@ -378,7 +519,7 @@
                 flex-direction: column;
             }
             
-            .search-input, .time-filter {
+            .search-input, .time-filter, .date-filter {
                 min-width: 100%;
             }
             
@@ -392,6 +533,26 @@
             .productivity-input {
                 font-size: 16px;
                 padding: 15px;
+            }
+            
+            /* Bulk entry modal mobile styles */
+            .bulk-entry-modal {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .bulk-entry-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .bulk-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .add-row-btn, .submit-bulk-btn {
+                width: 100%;
             }
         }
 
@@ -484,6 +645,10 @@
                 
                 <div class="productivity-form">
                     <div>
+                        <label for="dateInput">Date:</label>
+                        <input type="date" id="dateInput" class="productivity-input">
+                    </div>
+                    <div>
                         <label for="hourInput">Hour (0-23):</label>
                         <input type="number" id="hourInput" class="productivity-input" min="0" max="23" placeholder="Hour">
                     </div>
@@ -505,17 +670,21 @@
                     </div>
                     <div>
                         <button class="add-btn" onclick="addProductivity()">Add Record</button>
+                        <button class="bulk-entry-btn" onclick="openBulkEntryModal()">Bulk Entry</button>
                     </div>
                 </div>
                 <div id="productivityMessage" style="margin-top: 15px;"></div>
             </div>
 
             <div class="records-section">
-                <h3 style="margin-bottom: 20px; color: #4B78AC;">Today's Productivity Records</h3>
+                <h3 style="margin-bottom: 20px; color: #4B78AC;">Productivity Records</h3>
                 
                 <!-- Search and Filter Section -->
                 <div class="search-container">
                     <input type="text" id="searchInput" class="search-input" placeholder="Search by employee name or task type...">
+                    <select id="dateFilter" class="date-filter">
+                        <!-- Options will be populated dynamically -->
+                    </select>
                     <select id="timeFilter" class="time-filter">
                         <option value="all">All Hours</option>
                         <option value="0">12 AM - 1 AM</option>
@@ -550,6 +719,7 @@
                     <table class="records-table">
                         <thead>
                             <tr>
+                                <th>Date</th>
                                 <th>Employee Name</th>
                                 <th>Time</th>
                                 <th>Hour</th>
@@ -565,6 +735,39 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Bulk Entry Modal -->
+    <div id="bulkEntryModal" class="modal-overlay">
+        <div class="bulk-entry-modal">
+            <div class="bulk-header">
+                <h2>Bulk Entry - Add Multiple Records</h2>
+                <button class="close-modal" onclick="closeBulkEntryModal()">Close</button>
+            </div>
+            
+            <div class="bulk-form-container">
+                <div class="bulk-entry-row bulk-entry-row-header">
+                    <div>Employee</div>
+                    <div>Date</div>
+                    <div>Hour</div>
+                    <div>Pieces</div>
+                    <div>Task Type</div>
+                    <div>Line In</div>
+                    <div>Line Out</div>
+                    <div>Action</div>
+                </div>
+                <div id="bulkEntryRows">
+                    <!-- Bulk entry rows will be added here dynamically -->
+                </div>
+            </div>
+            
+            <div class="bulk-actions">
+                <button class="add-row-btn" onclick="addBulkEntryRow()">Add Row</button>
+                <button class="submit-bulk-btn" onclick="submitBulkEntries()">Submit All Records</button>
+            </div>
+            
+            <div id="bulkEntryMessage" style="margin-top: 15px;"></div>
         </div>
     </div>
 
@@ -599,6 +802,11 @@
         window.logout = logout;
         window.addProductivity = addProductivity;
         window.exportToExcel = exportToExcel;
+        window.openBulkEntryModal = openBulkEntryModal;
+        window.closeBulkEntryModal = closeBulkEntryModal;
+        window.addBulkEntryRow = addBulkEntryRow;
+        window.removeBulkEntryRow = removeBulkEntryRow;
+        window.submitBulkEntries = submitBulkEntries;
 
         async function login() {
             const employeeId = document.getElementById('employeeId').value.trim();
@@ -663,7 +871,7 @@
                 clearProductivityRecords();
                 
                 showDashboard();
-                loadTodayRecords();
+                loadAllRecords();
                 
             } catch (error) {
                 showError('Login failed. Please try again.');
@@ -746,7 +954,9 @@
             document.getElementById('loginTime').textContent = loginTime.toLocaleTimeString();
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
             
-            // Set current hour
+            // Set current date and hour
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
             document.getElementById('hourInput').value = new Date().getHours();
             
             // Start time display
@@ -756,6 +966,7 @@
             // Add event listeners for search and filter
             document.getElementById('searchInput').addEventListener('input', filterRecords);
             document.getElementById('timeFilter').addEventListener('change', filterRecords);
+            document.getElementById('dateFilter').addEventListener('change', filterRecords);
         }
 
         function updateTimeDisplay() {
@@ -780,6 +991,7 @@
 
         async function addProductivity() {
             const selectedEmployeeId = document.getElementById('employeeSelect').value;
+            const date = document.getElementById('dateInput').value;
             const hour = parseInt(document.getElementById('hourInput').value);
             const pieces = parseInt(document.getElementById('piecesInput').value);
             const taskType = document.getElementById('taskTypeInput').value.trim();
@@ -789,6 +1001,11 @@
 
             if (!selectedEmployeeId) {
                 showMessage('Please select an employee', 'error', messageDiv);
+                return;
+            }
+
+            if (!date) {
+                showMessage('Please select a date', 'error', messageDiv);
                 return;
             }
 
@@ -803,13 +1020,12 @@
             }
 
             try {
-                const today = new Date().toISOString().split('T')[0];
                 const recordId = Date.now().toString();
                 
                 const productivityData = {
                     employeeId: selectedEmployeeId,
                     employeeName: allEmployees[selectedEmployeeId].name,
-                    date: today,
+                    date: date,
                     hour: hour,
                     pieces: pieces || 0,
                     taskType: taskType,
@@ -820,7 +1036,7 @@
                 };
 
                 // Store in Firebase
-                const productivityRef = ref(database, `productivity/${selectedEmployeeId}/${today}/${recordId}`);
+                const productivityRef = ref(database, `productivity/${selectedEmployeeId}/${date}/${recordId}`);
                 await set(productivityRef, productivityData);
 
                 showMessage('Productivity record added successfully!', 'success', messageDiv);
@@ -832,7 +1048,7 @@
                 document.getElementById('lineOutInput').value = '';
                 
                 // Reload records
-                loadTodayRecords();
+                loadAllRecords();
                 
             } catch (error) {
                 showMessage('Error adding productivity record', 'error', messageDiv);
@@ -840,8 +1056,7 @@
             }
         }
 
-        function loadTodayRecords() {
-            const today = new Date().toISOString().split('T')[0];
+        function loadAllRecords() {
             const tableBody = document.getElementById('recordsTableBody');
             
             // Clear table first
@@ -849,7 +1064,7 @@
             
             let totalPieces = 0;
             
-            // Load from Firebase - now loading all employees' records for today
+            // Load from Firebase - now loading all employees' records for all dates
             const productivityRef = ref(database, `productivity`);
             onValue(productivityRef, (snapshot) => {
                 const data = snapshot.val();
@@ -863,11 +1078,12 @@
                     // Store in local records
                     productivityRecords = data;
                     
-                    // Collect all records for today
+                    // Collect all records
                     Object.entries(data).forEach(([employeeId, employeeData]) => {
-                        if (employeeData[today]) {
-                            Object.entries(employeeData[today]).forEach(([recordId, record]) => {
+                        Object.entries(employeeData).forEach(([date, dateData]) => {
+                            Object.entries(dateData).forEach(([recordId, record]) => {
                                 allRecords.push({
+                                    date: date,
                                     employeeId: employeeId,
                                     employeeName: record.employeeName,
                                     hour: record.hour,
@@ -880,23 +1096,33 @@
                                 
                                 totalPieces += record.pieces || 0;
                             });
-                        }
+                        });
                     });
                     
-                    // Sort records by time (newest first)
-                    allRecords.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+                    // Sort records by date and time (newest first)
+                    allRecords.sort((a, b) => {
+                        // First compare dates
+                        const dateComparison = b.date.localeCompare(a.date);
+                        if (dateComparison !== 0) return dateComparison;
+                        
+                        // If same date, compare by recorded time
+                        return new Date(b.recordedAt) - new Date(a.recordedAt);
+                    });
+                    
+                    // Populate date filter
+                    populateDateFilter();
                     
                     // Update table with all records initially
                     updateTableWithFilteredRecords();
                     
                     if (allRecords.length === 0) {
                         const row = tableBody.insertRow();
-                        row.innerHTML = '<td colspan="8" style="text-align: center; color: #666;">No records for today</td>';
+                        row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No records found</td>';
                     }
                 } else {
                     // No records found
                     const row = tableBody.insertRow();
-                    row.innerHTML = '<td colspan="8" style="text-align: center; color: #666;">No records for today</td>';
+                    row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No records found</td>';
                 }
                 
                 document.getElementById('totalPieces').textContent = totalPieces;
@@ -905,14 +1131,43 @@
             });
         }
 
-        function filterRecords() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const timeFilter = document.getElementById('timeFilter').value;
+        function populateDateFilter() {
+            const dateFilter = document.getElementById('dateFilter');
+            dateFilter.innerHTML = '<option value="all">All Dates</option>';
             
-            updateTableWithFilteredRecords(searchTerm, timeFilter);
+            // Get unique dates from allRecords
+            const uniqueDates = [...new Set(allRecords.map(record => record.date))];
+            
+            // Sort dates in descending order (newest first)
+            uniqueDates.sort((a, b) => b.localeCompare(a));
+            
+            // Add options for each date
+            uniqueDates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = formatDateForDisplay(date);
+                dateFilter.appendChild(option);
+            });
         }
 
-        function updateTableWithFilteredRecords(searchTerm = '', timeFilter = 'all') {
+        function formatDateForDisplay(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            
+            updateTableWithFilteredRecords(searchTerm, dateFilter, timeFilter);
+        }
+
+        function updateTableWithFilteredRecords(searchTerm = '', dateFilter = 'all', timeFilter = 'all') {
             const tableBody = document.getElementById('recordsTableBody');
             tableBody.innerHTML = '';
             
@@ -924,6 +1179,11 @@
                     record.employeeName.toLowerCase().includes(searchTerm) || 
                     record.taskType.toLowerCase().includes(searchTerm)
                 );
+            }
+            
+            // Apply date filter
+            if (dateFilter !== 'all') {
+                filteredRecords = filteredRecords.filter(record => record.date === dateFilter);
             }
             
             // Apply time filter
@@ -939,6 +1199,7 @@
                     const recordTime = new Date(record.recordedAt);
                     
                     row.innerHTML = `
+                        <td>${formatDateForDisplay(record.date)}</td>
                         <td>${record.employeeName}</td>
                         <td>${recordTime.toLocaleTimeString()}</td>
                         <td>${record.hour}:00</td>
@@ -951,17 +1212,17 @@
                 });
             } else {
                 const row = tableBody.insertRow();
-                row.innerHTML = '<td colspan="8" style="text-align: center; color: #666;">No matching records found</td>';
+                row.innerHTML = '<td colspan="9" style="text-align: center; color: #666;">No matching records found</td>';
             }
         }
 
         function exportToExcel() {
             // Create CSV content
-            let csvContent = "Employee Name,Time,Hour,Task Type,Pieces,Line In,Line Out,Recorded At\n";
+            let csvContent = "Date,Employee Name,Time,Hour,Task Type,Pieces,Line In,Line Out,Recorded At\n";
             
             allRecords.forEach(record => {
                 const recordTime = new Date(record.recordedAt);
-                csvContent += `"${record.employeeName}","${recordTime.toLocaleTimeString()}","${record.hour}:00","${record.taskType}","${record.pieces}","${record.lineIn}","${record.lineOut}","${recordTime.toLocaleString()}"\n`;
+                csvContent += `"${formatDateForDisplay(record.date)}","${record.employeeName}","${recordTime.toLocaleTimeString()}","${record.hour}:00","${record.taskType}","${record.pieces}","${record.lineIn}","${record.lineOut}","${recordTime.toLocaleString()}"\n`;
             });
             
             // Create download link
@@ -1012,6 +1273,164 @@
             setTimeout(() => {
                 element.style.display = 'none';
             }, 5000);
+        }
+
+        // Bulk Entry Functions
+        function openBulkEntryModal() {
+            const modal = document.getElementById('bulkEntryModal');
+            modal.style.display = 'flex';
+            
+            // Clear existing rows and add one initial row
+            const rowsContainer = document.getElementById('bulkEntryRows');
+            rowsContainer.innerHTML = '';
+            addBulkEntryRow();
+        }
+
+        function closeBulkEntryModal() {
+            const modal = document.getElementById('bulkEntryModal');
+            modal.style.display = 'none';
+            
+            // Clear the message
+            const messageDiv = document.getElementById('bulkEntryMessage');
+            messageDiv.style.display = 'none';
+        }
+
+        function addBulkEntryRow() {
+            const rowsContainer = document.getElementById('bulkEntryRows');
+            const rowId = Date.now().toString();
+            
+            const row = document.createElement('div');
+            row.className = 'bulk-entry-row';
+            row.id = `bulk-row-${rowId}`;
+            
+            // Create employee dropdown
+            let employeeOptions = '';
+            Object.entries(allEmployees).forEach(([id, employee]) => {
+                employeeOptions += `<option value="${id}">${employee.name} (${id})</option>`;
+            });
+            
+            // Get today's date for default value
+            const today = new Date().toISOString().split('T')[0];
+            
+            row.innerHTML = `
+                <div>
+                    <select class="productivity-input bulk-employee-select">
+                        <option value="">Select Employee</option>
+                        ${employeeOptions}
+                    </select>
+                </div>
+                <div>
+                    <input type="date" class="productivity-input bulk-date-input" value="${today}">
+                </div>
+                <div>
+                    <input type="number" class="productivity-input bulk-hour-input" min="0" max="23" placeholder="Hour" value="${new Date().getHours()}">
+                </div>
+                <div>
+                    <input type="number" class="productivity-input bulk-pieces-input" min="0" placeholder="Pieces">
+                </div>
+                <div>
+                    <input type="text" class="productivity-input bulk-task-type-input" placeholder="Task Type">
+                </div>
+                <div>
+                    <input type="number" class="productivity-input bulk-line-in-input" min="0" placeholder="Line In">
+                </div>
+                <div>
+                    <input type="number" class="productivity-input bulk-line-out-input" min="0" placeholder="Line Out">
+                </div>
+                <div>
+                    <button class="remove-row-btn" onclick="removeBulkEntryRow('${rowId}')">Remove</button>
+                </div>
+            `;
+            
+            rowsContainer.appendChild(row);
+        }
+
+        function removeBulkEntryRow(rowId) {
+            const row = document.getElementById(`bulk-row-${rowId}`);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        async function submitBulkEntries() {
+            const rowsContainer = document.getElementById('bulkEntryRows');
+            const rows = rowsContainer.querySelectorAll('.bulk-entry-row');
+            const messageDiv = document.getElementById('bulkEntryMessage');
+            
+            if (rows.length === 0) {
+                showMessage('No entries to submit', 'error', messageDiv);
+                return;
+            }
+            
+            let validEntries = 0;
+            let errorEntries = 0;
+            
+            // Process each row
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                
+                const employeeSelect = row.querySelector('.bulk-employee-select');
+                const dateInput = row.querySelector('.bulk-date-input');
+                const hourInput = row.querySelector('.bulk-hour-input');
+                const piecesInput = row.querySelector('.bulk-pieces-input');
+                const taskTypeInput = row.querySelector('.bulk-task-type-input');
+                const lineInInput = row.querySelector('.bulk-line-in-input');
+                const lineOutInput = row.querySelector('.bulk-line-out-input');
+                
+                const employeeId = employeeSelect.value;
+                const date = dateInput.value;
+                const hour = parseInt(hourInput.value);
+                const pieces = parseInt(piecesInput.value) || 0;
+                const taskType = taskTypeInput.value.trim();
+                const lineIn = parseInt(lineInInput.value) || 0;
+                const lineOut = parseInt(lineOutInput.value) || 0;
+                
+                // Validate required fields
+                if (!employeeId || !date || isNaN(hour) || hour < 0 || hour > 23 || !taskType) {
+                    errorEntries++;
+                    continue;
+                }
+                
+                try {
+                    const recordId = Date.now().toString() + i;
+                    
+                    const productivityData = {
+                        employeeId: employeeId,
+                        employeeName: allEmployees[employeeId].name,
+                        date: date,
+                        hour: hour,
+                        pieces: pieces,
+                        taskType: taskType,
+                        lineIn: lineIn,
+                        lineOut: lineOut,
+                        recordedAt: new Date().toISOString(),
+                        recordedBy: currentEmployee.id
+                    };
+
+                    // Store in Firebase
+                    const productivityRef = ref(database, `productivity/${employeeId}/${date}/${recordId}`);
+                    await set(productivityRef, productivityData);
+                    
+                    validEntries++;
+                } catch (error) {
+                    errorEntries++;
+                    console.error('Error adding bulk record:', error);
+                }
+            }
+            
+            // Show result message
+            if (validEntries > 0) {
+                showMessage(`Successfully added ${validEntries} records${errorEntries > 0 ? `, ${errorEntries} failed` : ''}`, 'success', messageDiv);
+                
+                // Clear the form after successful submission
+                rowsContainer.innerHTML = '';
+                addBulkEntryRow();
+                
+                // Reload records to show the new entries
+                loadAllRecords();
+            } else {
+                showMessage('No valid records were added. Please check your inputs.', 'error', messageDiv);
+            }
         }
 
         // Initialize on page load
