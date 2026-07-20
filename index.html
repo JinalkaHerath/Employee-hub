@@ -151,6 +151,12 @@
       width: 100%;
     }
 
+    .productivity-input:disabled {
+      background: #e9ecef;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
     .add-btn {
       padding: 12px 25px;
       background: #28a745;
@@ -451,6 +457,10 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+    }
+
+    .admin-only-col {
+      display: table-cell;
     }
 
     @media (min-width: 769px) {
@@ -775,6 +785,18 @@
       document.querySelectorAll('.admin-only-col').forEach(el => {
         el.style.display = admin ? '' : 'none';
       });
+      
+      // Date input: only admin can change it; everyone else sees it as disabled (auto-set)
+      const dateInput = document.getElementById('dateInput');
+      if (admin) {
+        dateInput.disabled = false;
+        dateInput.style.background = '#fff';
+        dateInput.style.cursor = 'pointer';
+      } else {
+        dateInput.disabled = true;
+        dateInput.style.background = '#e9ecef';
+        dateInput.style.cursor = 'not-allowed';
+      }
     }
     let loginTime = null;
     let allEmployees = {};
@@ -910,7 +932,14 @@
         opSelect.appendChild(opt);
       });
 
-      document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+      // --- AUTOMATIC DATE from system clock (internet time via system) ---
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${day}`;
+      const dateInput = document.getElementById('dateInput');
+      dateInput.value = todayStr;
 
       updateTimeDisplay();
       setInterval(updateTimeDisplay, 1000);
@@ -1272,7 +1301,11 @@
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      document.getElementById('dateInput').value = `${year}-${month}-${day}`;
     });
 
   </script>
