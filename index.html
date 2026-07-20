@@ -601,7 +601,7 @@
       </div>
 
       <!-- Operation Summary -->
-      <div class="summary-card">
+      <div class="summary-card" id="operationSummaryCard">
         <h4>📊 Operation Summary (Today)</h4>
         <div class="summary-grid" id="operationSummary">
           <!-- populated by JS -->
@@ -671,7 +671,7 @@
         </div>
       </div>
 
-      <div class="records-section">
+      <div class="records-section" id="recordsSection">
         <div class="table-header">
           <h3 style="color:#4B78AC;">Productivity Records</h3>
         </div>
@@ -732,27 +732,27 @@
       "LAYERING": 2,
       "NUMBERING": 1,
       "TAPE ATTACH": 4,
-      "BACK RISE OIL": 1.5,
+      "BACK RISE O/L": 1.5,
       "BACK RISE OUTLINE": 1.5,
-      "FRONT RISE OIL": 1.5,
+      "FRONT RISE O/L": 1.5,
       "FRONT RISE OUTLINE": 1.5,
       "POCKET MARKING": 1.5,
       "POCKET ATTACH": 3.5,
       "POCKET OUTLINE": 3.5,
       "POCKET TAC": 3.5,
-      "POCKET BAG OIL": 1.5,
+      "POCKET BAG O/L": 1.5,
       "SIDE SEAM": 3,
       "INSEAM": 2,
       "BUTTON HOLE MARKING AND FUSING": 1,
       "BUTTON HOLE": 2,
-      "W/BELASTIC TAC AND MAKING": 2,
-      "W/BELASTIC OIL": 2,
-      "W/BELASTIC TAC": 1.5,
-      "W/BELASTIC KANSAI ATTACH": 6,
+      "W/B ELASTIC TAC AND MAKING": 2,
+      "W/B ELASTIC O/L": 2,
+      "W/B ELASTIC TAC": 1.5,
+      "W/B ELASTIC KANSAI ATTACH": 6,
       "BOTTOM HEM": 4,
       "TRIMMING": 2,
       "CODE THREAD": 2,
-      "HEATSEALIRON": 2,
+      "HEATSEAL IRON": 2,
       "PACKING": 2
     };
 
@@ -767,6 +767,10 @@
       const admin = isAdmin();
       // Salary summary section (Daily Total / Monthly Total tables)
       document.getElementById('salarySummarySection').style.display = admin ? '' : 'none';
+      // Operation Summary table (whole section)
+      document.getElementById('operationSummaryCard').style.display = admin ? '' : 'none';
+      // Productivity Records table (whole section)
+      document.getElementById('recordsSection').style.display = admin ? '' : 'none';
       // Rate / Salary / Action columns in the records table
       document.querySelectorAll('.admin-only-col').forEach(el => {
         el.style.display = admin ? '' : 'none';
@@ -971,7 +975,7 @@
       try {
         const newRef = push(ref(database, 'productivity_records'));
         await set(newRef, record);
-        msgDiv.innerHTML = `<div class="success-message">Record added! Salary: LKR ${salary.toFixed(2)}</div>`;
+        msgDiv.innerHTML = `<div class="success-message">Record added!${isAdmin() ? ` Salary: LKR ${salary.toFixed(2)}` : ''}</div>`;
         document.getElementById('piecesInput').value = '';
         // The real-time listener will update the UI automatically
       } catch (e) {
