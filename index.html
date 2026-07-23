@@ -672,7 +672,12 @@
             <div id="monthlySalaryContainer">
               <table class="salary-table" id="monthlySalaryTable">
                 <thead>
-                  <tr><th>Employee</th><th>Total Pieces</th><th>Total Salary (LKR)</th></tr>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Total Pieces</th>
+                    <th>Days Worked</th>
+                    <th>Total Salary (LKR)</th>
+                  </tr>
                 </thead>
                 <tbody id="monthlySalaryBody"></tbody>
               </table>
@@ -753,7 +758,8 @@
       "POCKET BAG O/L": 1.5,
       "SIDE SEAM": 3,
       "INSEAM": 2,
-      "BUTTON HOLE MARKING AND FUSING": 1,
+      "BUTTON HOLE MARKING": 0.5,
+      "BUTTON HOLE FUSING": 0.5,
       "BUTTON HOLE": 2,
       "W/B ELASTIC TAC AND MAKING": 2,
       "W/B ELASTIC O/L": 2,
@@ -762,7 +768,8 @@
       "BOTTOM HEM": 4,
       "TRIMMING": 2,
       "CODE THREAD": 2,
-      "HEATSEAL IRON": 2,
+      "HEATSEAL": 1,
+      "IRON": 1,
       "PACKING": 2
     };
 
@@ -1104,7 +1111,7 @@
       });
     }
 
-    // ----- SALARY SUMMARIES (Daily & Monthly) -----
+    // ----- SALARY SUMMARIES (Daily & Monthly) with Days Worked -----
     function updateSalarySummaries() {
       const today = new Date().toISOString().split('T')[0];
       const currentMonth = today.substring(0, 7);
@@ -1140,35 +1147,58 @@
         dailyBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No records today</td></tr>';
       }
 
-      // Monthly
+      // Monthly with Days Worked
       const monthlyRecords = allRecords.filter(r => r.date.startsWith(currentMonth));
       const monthlySummary = {};
+      
+      // Group by employee, collect unique dates for days worked
       monthlyRecords.forEach(r => {
         if (!monthlySummary[r.employeeId]) {
-          monthlySummary[r.employeeId] = { name: r.employeeName, pieces: 0, salary: 0 };
+          monthlySummary[r.employeeId] = { 
+            name: r.employeeName, 
+            pieces: 0, 
+            salary: 0,
+            dates: new Set()
+          };
         }
         monthlySummary[r.employeeId].pieces += r.pieces;
         monthlySummary[r.employeeId].salary += r.salary;
+        monthlySummary[r.employeeId].dates.add(r.date);
       });
 
       const monthlyBody = document.getElementById('monthlySalaryBody');
       monthlyBody.innerHTML = '';
       let monthlyGrandTotal = 0;
       let monthlyTotalPieces = 0;
+      let monthlyTotalDays = 0;
+      
       Object.values(monthlySummary).forEach(emp => {
+        const daysWorked = emp.dates.size;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${emp.name}</td><td>${emp.pieces}</td><td>LKR ${emp.salary.toFixed(2)}</td>`;
+        tr.innerHTML = `
+          <td>${emp.name}</td>
+          <td>${emp.pieces}</td>
+          <td>${daysWorked}</td>
+          <td>LKR ${emp.salary.toFixed(2)}</td>
+        `;
         monthlyBody.appendChild(tr);
         monthlyGrandTotal += emp.salary;
         monthlyTotalPieces += emp.pieces;
+        monthlyTotalDays += daysWorked;
       });
+      
       if (Object.keys(monthlySummary).length > 0) {
         const tr = document.createElement('tr');
         tr.className = 'total-row';
-        tr.innerHTML = `<td><strong>TOTAL</strong></td><td>${monthlyTotalPieces}</td><td>LKR ${monthlyGrandTotal.toFixed(2)}</td>`;
+        tr.innerHTML = `
+          <td><strong>TOTAL</strong></td>
+          <td>${monthlyTotalPieces}</td>
+          <td>${monthlyTotalDays}</td>
+          <td>LKR ${monthlyGrandTotal.toFixed(2)}</td>
+        `;
         monthlyBody.appendChild(tr);
       } else {
-        monthlyBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No records this month</td></tr>';
+        monthlyBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">No records this month</td></tr>';
       }
     }
 
@@ -1261,29 +1291,38 @@
       }
       csvLines.push('');
       
-      // Section 3: Monthly Summary
+      // Section 3: Monthly Summary with Days Worked
       csvLines.push('=== MONTHLY SUMMARY (Current Month) ===');
-      csvLines.push('Employee,Total Pieces,Total Salary (LKR)');
+      csvLines.push('Employee,Total Pieces,Days Worked,Total Salary (LKR)');
       const monthlyRecords = allRecords.filter(r => r.date.startsWith(currentMonth));
       const monthlySummary = {};
       monthlyRecords.forEach(r => {
         if (!monthlySummary[r.employeeId]) {
-          monthlySummary[r.employeeId] = { name: r.employeeName, pieces: 0, salary: 0 };
+          monthlySummary[r.employeeId] = { 
+            name: r.employeeName, 
+            pieces: 0, 
+            salary: 0,
+            dates: new Set()
+          };
         }
         monthlySummary[r.employeeId].pieces += r.pieces;
         monthlySummary[r.employeeId].salary += r.salary;
+        monthlySummary[r.employeeId].dates.add(r.date);
       });
       let monthlyTotalPieces = 0;
       let monthlyTotalSalary = 0;
+      let monthlyTotalDays = 0;
       Object.values(monthlySummary).forEach(emp => {
-        csvLines.push(`${emp.name},${emp.pieces},${emp.salary.toFixed(2)}`);
+        const days = emp.dates.size;
+        csvLines.push(`${emp.name},${emp.pieces},${days},${emp.salary.toFixed(2)}`);
         monthlyTotalPieces += emp.pieces;
         monthlyTotalSalary += emp.salary;
+        monthlyTotalDays += days;
       });
       if (Object.keys(monthlySummary).length > 0) {
-        csvLines.push(`TOTAL,${monthlyTotalPieces},${monthlyTotalSalary.toFixed(2)}`);
+        csvLines.push(`TOTAL,${monthlyTotalPieces},${monthlyTotalDays},${monthlyTotalSalary.toFixed(2)}`);
       } else {
-        csvLines.push('No records this month,0,0.00');
+        csvLines.push('No records this month,0,0,0.00');
       }
       
       // Download the CSV
