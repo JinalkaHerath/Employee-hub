@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Employee Productivity & Salary System (LKR)</title>
+  <title>Employee Productivity System</title>
   <style>
     * {
       margin: 0;
@@ -568,8 +568,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>Employee Productivity & Salary System</h1>
-      <p>Track pieces per operation and calculate salaries (LKR)</p>
+      <h1>Employee Productivity System</h1>
+      <p>Track pieces per operation and time interval</p>
     </div>
 
     <!-- Login -->
@@ -606,7 +606,6 @@
           <h3>Today's Session</h3>
           <p><strong>Date:</strong> <span id="currentDate"></span></p>
           <p><strong>Total Pieces:</strong> <span id="totalPieces">0</span></p>
-          <p id="todaySalaryRow" class="admin-only-col"><strong>Total Salary (Today):</strong> <span class="currency">LKR</span> <span id="totalSalary">0.00</span></p>
         </div>
       </div>
 
@@ -633,57 +632,32 @@
           </div>
           <div>
             <label for="operationSelect">Operation:</label>
-            <select id="operationSelect" class="productivity-input">
-              <!-- populated from operationRates -->
-            </select>
+            <input type="text" id="operationSelect" class="productivity-input" placeholder="Type task / operation" autocomplete="off">
           </div>
           <div>
             <label for="piecesInput">Pieces:</label>
             <input type="number" id="piecesInput" class="productivity-input" min="0" placeholder="Pieces">
+          </div>
+          <div>
+            <label for="intervalSelect">Time Interval:</label>
+            <select id="intervalSelect" class="productivity-input">
+              <option value="">Select interval</option>
+              <option value="1 - 8:00 AM - 9:00 AM">1 - 8:00 AM - 9:00 AM</option>
+              <option value="2 - 9:00 AM - 10:00 AM">2 - 9:00 AM - 10:00 AM</option>
+              <option value="3 - 10:00 AM - 11:00 AM">3 - 10:00 AM - 11:00 AM</option>
+              <option value="4 - 11:15 AM - 12:15 PM">4 - 11:15 AM - 12:15 PM</option>
+              <option value="5 - 12:15 PM - 1:45 PM">5 - 12:15 PM - 1:45 PM</option>
+              <option value="6 - 1:45 PM - 2:45 PM">6 - 1:45 PM - 2:45 PM</option>
+              <option value="7 - 2:45 PM - 4:00 PM">7 - 2:45 PM - 4:00 PM</option>
+              <option value="8 - 4:00 PM - 5:00 PM">8 - 4:00 PM - 5:00 PM</option>
+              <option value="9 - 5:00 PM - 6:00 PM">9 - 5:00 PM - 6:00 PM</option>
+            </select>
           </div>
           <div class="button-container">
             <button class="add-btn" onclick="addProductivity()">Add Record</button>
           </div>
         </div>
         <div id="productivityMessage" style="margin-top:15px;"></div>
-      </div>
-
-      <!-- Salary Summary Tables -->
-      <div class="salary-summary-section" id="salarySummarySection">
-        <h3 style="margin-bottom:10px; color:#4B78AC;">💰 Salary Summary</h3>
-        <div class="salary-tables">
-          <div class="salary-table-wrapper">
-            <div class="table-header">
-              <h4>📅 Daily Total (Today)</h4>
-            </div>
-            <div id="dailySalaryContainer">
-              <table class="salary-table" id="dailySalaryTable">
-                <thead>
-                  <tr><th>Employee</th><th>Total Pieces</th><th>Total Salary (LKR)</th></tr>
-                </thead>
-                <tbody id="dailySalaryBody"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="salary-table-wrapper">
-            <div class="table-header">
-              <h4>📆 Monthly Total (Current Month)</h4>
-            </div>
-            <div id="monthlySalaryContainer">
-              <table class="salary-table" id="monthlySalaryTable">
-                <thead>
-                  <tr>
-                    <th>Employee</th>
-                    <th>Total Pieces</th>
-                    <th>Days Worked</th>
-                    <th>Total Salary (LKR)</th>
-                  </tr>
-                </thead>
-                <tbody id="monthlySalaryBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="records-section" id="recordsSection">
@@ -705,10 +679,8 @@
                 <th>Date</th>
                 <th>Employee</th>
                 <th>Operation</th>
-                <th class="admin-only-col" id="colRate">Rate</th>
                 <th>Pieces</th>
-                <th class="admin-only-col" id="colSalary">Salary (LKR)</th>
-                <th>Recorded At</th>
+                <th>Time Interval</th>
                 <th class="admin-only-col" id="colAction">Action</th>
               </tr>
             </thead>
@@ -741,37 +713,6 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // ----- OPERATION RATES (from image) -----
-    const OPERATION_RATES = {
-      "CUTTING": 7,
-      "LAYERING": 2,
-      "NUMBERING": 1,
-      "TAPE ATTACH": 4,
-      "BACK RISE O/L": 1.5,
-      "BACK RISE OUTLINE": 1.5,
-      "FRONT RISE O/L": 1.5,
-      "FRONT RISE OUTLINE": 1.5,
-      "POCKET MARKING": 1.5,
-      "POCKET ATTACH": 3.5,
-      "POCKET OUTLINE": 3.5,
-      "POCKET TAC": 3.5,
-      "POCKET BAG O/L": 1.5,
-      "SIDE SEAM": 3,
-      "INSEAM": 2,
-      "BUTTON HOLE MARKING": 0.5,
-      "BUTTON HOLE FUSING": 0.5,
-      "BUTTON HOLE": 2,
-      "W/B ELASTIC TAC AND MAKING": 2,
-      "W/B ELASTIC O/L": 2,
-      "W/B ELASTIC TAC": 1.5,
-      "W/B ELASTIC KANSAI ATTACH": 6,
-      "BOTTOM HEM": 4,
-      "TRIMMING": 2,
-      "CODE THREAD": 2,
-      "HEATSEAL": 1,
-      "IRON": 1,
-      "PACKING": 2
-    };
 
     // ----- GLOBALS -----
     let currentEmployee = null;
@@ -782,8 +723,6 @@
 
     function applyRoleVisibility() {
       const admin = isAdmin();
-      // Salary summary section (Daily Total / Monthly Total tables)
-      document.getElementById('salarySummarySection').style.display = admin ? '' : 'none';
       // Operation Summary table (whole section)
       document.getElementById('operationSummaryCard').style.display = admin ? '' : 'none';
       // Productivity Records table (whole section)
@@ -882,11 +821,6 @@
             // Normalize legacy/incomplete records so missing fields
             // never crash the UI (e.g. old records saved without salary)
             r.pieces = Number(r.pieces) || 0;
-            r.rate = Number(r.rate) || 0;
-            r.salary = Number(r.salary);
-            if (isNaN(r.salary)) {
-              r.salary = r.pieces * r.rate;
-            }
             allRecords.push(r);
           });
           allRecords.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
@@ -896,7 +830,6 @@
         displayRecords(allRecords);
         updateTotals();
         updateOperationSummary();
-        updateSalarySummaries();
       });
     }
 
@@ -929,15 +862,6 @@
 
       applyRoleVisibility();
 
-      // Populate operation dropdown
-      const opSelect = document.getElementById('operationSelect');
-      opSelect.innerHTML = '';
-      Object.keys(OPERATION_RATES).forEach(op => {
-        const opt = document.createElement('option');
-        opt.value = op;
-        opt.textContent = isAdmin() ? `${op} (Rate: ${OPERATION_RATES[op]})` : op;
-        opSelect.appendChild(opt);
-      });
 
       // --- AUTOMATIC DATE from system clock (internet time via system) ---
       const now = new Date();
@@ -973,18 +897,13 @@
     async function addProductivity() {
       const employeeId = document.getElementById('employeeSelect').value;
       const date = document.getElementById('dateInput').value;
-      const operation = document.getElementById('operationSelect').value;
+      const operation = document.getElementById('operationSelect').value.trim();
+      const interval = document.getElementById('intervalSelect').value;
       const pieces = parseInt(document.getElementById('piecesInput').value);
       const msgDiv = document.getElementById('productivityMessage');
 
-      if (!employeeId || !date || !operation || isNaN(pieces) || pieces < 0) {
+      if (!employeeId || !date || !operation || !interval || isNaN(pieces) || pieces < 0) {
         msgDiv.innerHTML = '<div class="error-message">Please fill all fields correctly.</div>';
-        return;
-      }
-
-      const rate = OPERATION_RATES[operation];
-      if (rate === undefined) {
-        msgDiv.innerHTML = '<div class="error-message">Invalid operation.</div>';
         return;
       }
 
@@ -994,16 +913,13 @@
         return;
       }
 
-      const salary = pieces * rate;
-
       const record = {
         employeeId,
         employeeName: employee.name,
         date,
         operation,
-        rate,
         pieces,
-        salary,
+        timeInterval: interval,
         recordedAt: new Date().toISOString(),
         recordedBy: currentEmployee.id
       };
@@ -1011,8 +927,10 @@
       try {
         const newRef = push(ref(database, 'productivity_records'));
         await set(newRef, record);
-        msgDiv.innerHTML = `<div class="success-message">Record added!${isAdmin() ? ` Salary: LKR ${salary.toFixed(2)}` : ''}</div>`;
+        msgDiv.innerHTML = `<div class="success-message">Record added!</div>`;
         document.getElementById('piecesInput').value = '';
+        document.getElementById('operationSelect').value = '';
+        document.getElementById('intervalSelect').value = '';
         // The real-time listener will update the UI automatically
       } catch (e) {
         console.error(e);
@@ -1058,10 +976,8 @@
           <td>${new Date(r.date).toLocaleDateString()}</td>
           <td>${r.employeeName}</td>
           <td>${r.operation}</td>
-          ${admin ? `<td>${r.rate}</td>` : ''}
           <td>${r.pieces}</td>
-          ${admin ? `<td>LKR ${r.salary.toFixed(2)}</td>` : ''}
-          <td>${new Date(r.recordedAt).toLocaleTimeString()}</td>
+          <td>${r.timeInterval || '-'}</td>
           ${admin ? `<td><button class="delete-btn" onclick="deleteRecord('${r.id}')">Delete</button></td>` : ''}
         `;
         tbody.appendChild(tr);
@@ -1076,9 +992,7 @@
       const today = new Date().toISOString().split('T')[0];
       const todayRecords = allRecords.filter(r => r.date === today);
       const totalPieces = todayRecords.reduce((sum, r) => sum + r.pieces, 0);
-      const totalSalary = todayRecords.reduce((sum, r) => sum + r.salary, 0);
       document.getElementById('totalPieces').textContent = totalPieces;
-      document.getElementById('totalSalary').textContent = totalSalary.toFixed(2);
     }
 
     // ----- OPERATION SUMMARY (today) -----
@@ -1087,9 +1001,8 @@
       const todayRecords = allRecords.filter(r => r.date === today);
       const summary = {};
       todayRecords.forEach(r => {
-        if (!summary[r.operation]) summary[r.operation] = { pieces: 0, salary: 0 };
+        if (!summary[r.operation]) summary[r.operation] = { pieces: 0 };
         summary[r.operation].pieces += r.pieces;
-        summary[r.operation].salary += r.salary;
       });
 
       const container = document.getElementById('operationSummary');
@@ -1105,101 +1018,9 @@
         div.innerHTML = `
           <div class="label">${op}</div>
           <div class="value">${summary[op].pieces} pcs</div>
-          ${isAdmin() ? `<div style="font-size:0.9em; color:#4B78AC;">LKR ${summary[op].salary.toFixed(2)}</div>` : ''}
         `;
         container.appendChild(div);
       });
-    }
-
-    // ----- SALARY SUMMARIES (Daily & Monthly) with Days Worked -----
-    function updateSalarySummaries() {
-      const today = new Date().toISOString().split('T')[0];
-      const currentMonth = today.substring(0, 7);
-
-      // Daily
-      const dailyRecords = allRecords.filter(r => r.date === today);
-      const dailySummary = {};
-      dailyRecords.forEach(r => {
-        if (!dailySummary[r.employeeId]) {
-          dailySummary[r.employeeId] = { name: r.employeeName, pieces: 0, salary: 0 };
-        }
-        dailySummary[r.employeeId].pieces += r.pieces;
-        dailySummary[r.employeeId].salary += r.salary;
-      });
-
-      const dailyBody = document.getElementById('dailySalaryBody');
-      dailyBody.innerHTML = '';
-      let dailyGrandTotal = 0;
-      let dailyTotalPieces = 0;
-      Object.values(dailySummary).forEach(emp => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${emp.name}</td><td>${emp.pieces}</td><td>LKR ${emp.salary.toFixed(2)}</td>`;
-        dailyBody.appendChild(tr);
-        dailyGrandTotal += emp.salary;
-        dailyTotalPieces += emp.pieces;
-      });
-      if (Object.keys(dailySummary).length > 0) {
-        const tr = document.createElement('tr');
-        tr.className = 'total-row';
-        tr.innerHTML = `<td><strong>TOTAL</strong></td><td>${dailyTotalPieces}</td><td>LKR ${dailyGrandTotal.toFixed(2)}</td>`;
-        dailyBody.appendChild(tr);
-      } else {
-        dailyBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No records today</td></tr>';
-      }
-
-      // Monthly with Days Worked
-      const monthlyRecords = allRecords.filter(r => r.date.startsWith(currentMonth));
-      const monthlySummary = {};
-      
-      // Group by employee, collect unique dates for days worked
-      monthlyRecords.forEach(r => {
-        if (!monthlySummary[r.employeeId]) {
-          monthlySummary[r.employeeId] = { 
-            name: r.employeeName, 
-            pieces: 0, 
-            salary: 0,
-            dates: new Set()
-          };
-        }
-        monthlySummary[r.employeeId].pieces += r.pieces;
-        monthlySummary[r.employeeId].salary += r.salary;
-        monthlySummary[r.employeeId].dates.add(r.date);
-      });
-
-      const monthlyBody = document.getElementById('monthlySalaryBody');
-      monthlyBody.innerHTML = '';
-      let monthlyGrandTotal = 0;
-      let monthlyTotalPieces = 0;
-      let monthlyTotalDays = 0;
-      
-      Object.values(monthlySummary).forEach(emp => {
-        const daysWorked = emp.dates.size;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${emp.name}</td>
-          <td>${emp.pieces}</td>
-          <td>${daysWorked}</td>
-          <td>LKR ${emp.salary.toFixed(2)}</td>
-        `;
-        monthlyBody.appendChild(tr);
-        monthlyGrandTotal += emp.salary;
-        monthlyTotalPieces += emp.pieces;
-        monthlyTotalDays += daysWorked;
-      });
-      
-      if (Object.keys(monthlySummary).length > 0) {
-        const tr = document.createElement('tr');
-        tr.className = 'total-row';
-        tr.innerHTML = `
-          <td><strong>TOTAL</strong></td>
-          <td>${monthlyTotalPieces}</td>
-          <td>${monthlyTotalDays}</td>
-          <td>LKR ${monthlyGrandTotal.toFixed(2)}</td>
-        `;
-        monthlyBody.appendChild(tr);
-      } else {
-        monthlyBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">No records this month</td></tr>';
-      }
     }
 
     // ----- DELETE -----
@@ -1252,86 +1073,16 @@
         return;
       }
       const today = new Date().toISOString().split('T')[0];
-      const currentMonth = today.substring(0, 7);
-      
-      // Build the complete CSV content
-      let csvLines = [];
-      
-      // Section 1: All Records
-      csvLines.push('=== ALL PRODUCTIVITY RECORDS ===');
-      csvLines.push('Date,Employee,Operation,Rate,Pieces,Salary (LKR),Recorded At');
+      const q = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = ['Date,Employee,Operation,Pieces,Time Interval'];
       allRecords.forEach(r => {
-        csvLines.push(`${r.date},${r.employeeName},${r.operation},${r.rate},${r.pieces},${r.salary.toFixed(2)},${new Date(r.recordedAt).toLocaleString()}`);
+        lines.push([r.date, q(r.employeeName), q(r.operation), r.pieces, q(r.timeInterval || '')].join(','));
       });
-      csvLines.push(''); // Empty line between sections
-      
-      // Section 2: Daily Summary
-      csvLines.push('=== DAILY SUMMARY (Today) ===');
-      csvLines.push('Employee,Total Pieces,Total Salary (LKR)');
-      const dailyRecords = allRecords.filter(r => r.date === today);
-      const dailySummary = {};
-      dailyRecords.forEach(r => {
-        if (!dailySummary[r.employeeId]) {
-          dailySummary[r.employeeId] = { name: r.employeeName, pieces: 0, salary: 0 };
-        }
-        dailySummary[r.employeeId].pieces += r.pieces;
-        dailySummary[r.employeeId].salary += r.salary;
-      });
-      let dailyTotalPieces = 0;
-      let dailyTotalSalary = 0;
-      Object.values(dailySummary).forEach(emp => {
-        csvLines.push(`${emp.name},${emp.pieces},${emp.salary.toFixed(2)}`);
-        dailyTotalPieces += emp.pieces;
-        dailyTotalSalary += emp.salary;
-      });
-      if (Object.keys(dailySummary).length > 0) {
-        csvLines.push(`TOTAL,${dailyTotalPieces},${dailyTotalSalary.toFixed(2)}`);
-      } else {
-        csvLines.push('No records today,0,0.00');
-      }
-      csvLines.push('');
-      
-      // Section 3: Monthly Summary with Days Worked
-      csvLines.push('=== MONTHLY SUMMARY (Current Month) ===');
-      csvLines.push('Employee,Total Pieces,Days Worked,Total Salary (LKR)');
-      const monthlyRecords = allRecords.filter(r => r.date.startsWith(currentMonth));
-      const monthlySummary = {};
-      monthlyRecords.forEach(r => {
-        if (!monthlySummary[r.employeeId]) {
-          monthlySummary[r.employeeId] = { 
-            name: r.employeeName, 
-            pieces: 0, 
-            salary: 0,
-            dates: new Set()
-          };
-        }
-        monthlySummary[r.employeeId].pieces += r.pieces;
-        monthlySummary[r.employeeId].salary += r.salary;
-        monthlySummary[r.employeeId].dates.add(r.date);
-      });
-      let monthlyTotalPieces = 0;
-      let monthlyTotalSalary = 0;
-      let monthlyTotalDays = 0;
-      Object.values(monthlySummary).forEach(emp => {
-        const days = emp.dates.size;
-        csvLines.push(`${emp.name},${emp.pieces},${days},${emp.salary.toFixed(2)}`);
-        monthlyTotalPieces += emp.pieces;
-        monthlyTotalSalary += emp.salary;
-        monthlyTotalDays += days;
-      });
-      if (Object.keys(monthlySummary).length > 0) {
-        csvLines.push(`TOTAL,${monthlyTotalPieces},${monthlyTotalDays},${monthlyTotalSalary.toFixed(2)}`);
-      } else {
-        csvLines.push('No records this month,0,0,0.00');
-      }
-      
-      // Download the CSV
-      const csvContent = csvLines.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `complete_report_${today}.csv`;
+      a.download = `productivity_report_${today}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
