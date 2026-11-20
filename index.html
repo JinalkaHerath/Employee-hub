@@ -463,6 +463,170 @@
       display: table-cell;
     }
 
+    /* ---- Universal Job Number + line status ---- */
+    .job-section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      border: 2px solid #dbe5f1;
+    }
+
+    .job-section h3 {
+      color: #4B78AC;
+      margin-bottom: 15px;
+    }
+
+    .job-section h4 {
+      color: #4B78AC;
+      margin: 22px 0 12px;
+    }
+
+    .job-select-big {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 14px;
+    }
+
+    .line-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+
+    .line-form label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .line-balance-box {
+      background: #eef3fa !important;
+      font-weight: 700;
+      color: #2c4f7a;
+    }
+
+    .line-balance-box.edited {
+      background: #fff8e6 !important;
+      color: #8a5a00;
+    }
+
+    .line-balance-box.negative {
+      color: #c0392b;
+      background: #fdecea !important;
+    }
+
+    .line-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .line-stat {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .line-stat .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .line-stat .value {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #333;
+      margin-top: 4px;
+    }
+
+    .line-stat .sub {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .line-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 620px;
+    }
+
+    .line-table th, .line-table td {
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e3e3e3;
+    }
+
+    .line-table th {
+      background: #4B78AC;
+      color: white;
+    }
+
+    .neg { color: #c0392b; font-weight: 600; }
+
+    .summary-line {
+      font-size: 13px;
+      color: #34557d;
+      margin: -4px 0 10px;
+    }
+
+    /* ---- Job File link ---- */
+    .job-hint {
+      margin-top: 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #eef3fa;
+      color: #34557d;
+      font-size: 14px;
+      display: none;
+    }
+
+    .job-summary-block {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .job-summary-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .job-summary-head .job-title {
+      font-weight: 700;
+      color: #4B78AC;
+    }
+
+    .job-summary-head .job-meta {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .job-summary-block .summary-item {
+      background: white;
+    }
+
+    .summary-item .machine {
+      font-size: 0.75em;
+      color: #888;
+      margin-top: 2px;
+    }
+
     @media (min-width: 769px) {
       .productivity-form {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -611,9 +775,57 @@
 
       <!-- Operation Summary -->
       <div class="summary-card" id="operationSummaryCard">
-        <h4>📊 Operation Summary (Today)</h4>
-        <div class="summary-grid" id="operationSummary">
+        <h4>📊 Operation Summary by Job Number (Today)</h4>
+        <div id="operationSummary">
           <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- Universal Job Number + line status (used by everything below) -->
+      <div class="job-section" id="jobSection">
+        <h3>🧾 Job Number</h3>
+        <select id="jobSelect" class="productivity-input job-select-big">
+          <option value="">Loading job numbers...</option>
+        </select>
+        <div id="jobHint" class="job-hint" style="margin-top:12px;"></div>
+
+        <h4>📦 Line Status Entry</h4>
+        <div class="line-form">
+          <div>
+            <label for="lineDateInput">Date:</label>
+            <input type="date" id="lineDateInput" class="productivity-input">
+          </div>
+          <div>
+            <label for="lineBalanceInput">Line Balance:</label>
+            <input type="number" id="lineBalanceInput" class="productivity-input line-balance-box" readonly placeholder="Auto" step="1">
+            <div id="lineBalanceNote" style="font-size:12px;color:#888;margin-top:4px;">Auto: Input − Output</div>
+          </div>
+          <div>
+            <label for="lineInputInput">Line Input:</label>
+            <input type="number" id="lineInputInput" class="productivity-input" min="0" placeholder="Pieces in">
+          </div>
+          <div>
+            <label for="lineOutputInput">Line Output:</label>
+            <input type="number" id="lineOutputInput" class="productivity-input" min="0" placeholder="Pieces out">
+          </div>
+          <div>
+            <label for="packingBalanceInput">Packing Balance:</label>
+            <input type="number" id="packingBalanceInput" class="productivity-input" min="0" placeholder="Pieces to pack">
+          </div>
+          <div>
+            <button class="add-btn" onclick="addLineRecord()" style="height:49px;">Save Line Entry</button>
+          </div>
+        </div>
+        <div id="lineMessage" style="margin-top:12px;"></div>
+        <div class="line-stats" id="lineStats"></div>
+        <div id="lineEntriesWrap" style="display:none;">
+          <h4>🕒 Recent Line Entries for this Job</h4>
+          <div class="table-container" style="margin-top:0;">
+            <table class="line-table">
+              <thead><tr><th>Date</th><th>Time</th><th>Line Input</th><th>Line Output</th><th>Line Balance</th><th>Packing Balance</th><th>Entered By</th><th class="admin-only-col">Action</th></tr></thead>
+              <tbody id="lineEntriesBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -631,14 +843,6 @@
             <input type="date" id="dateInput" class="productivity-input">
           </div>
           <div>
-            <label for="operationSelect">Operation:</label>
-            <input type="text" id="operationSelect" class="productivity-input" placeholder="Type task / operation" autocomplete="off">
-          </div>
-          <div>
-            <label for="piecesInput">Pieces:</label>
-            <input type="number" id="piecesInput" class="productivity-input" min="0" placeholder="Pieces">
-          </div>
-          <div>
             <label for="intervalSelect">Time Interval:</label>
             <select id="intervalSelect" class="productivity-input">
               <option value="">Select interval</option>
@@ -653,6 +857,16 @@
               <option value="9 - 5:00 PM - 6:00 PM">9 - 5:00 PM - 6:00 PM</option>
             </select>
           </div>
+          <div>
+            <label for="operationSelect">Operation:</label>
+            <select id="operationSelect" class="productivity-input" disabled>
+              <option value="">Select a job number above first</option>
+            </select>
+          </div>
+          <div>
+            <label for="piecesInput">Pieces:</label>
+            <input type="number" id="piecesInput" class="productivity-input" min="0" placeholder="Pieces">
+          </div>
           <div class="button-container">
             <button class="add-btn" onclick="addProductivity()">Add Record</button>
           </div>
@@ -666,7 +880,10 @@
         </div>
 
         <div class="search-container">
-          <input type="text" id="searchInput" class="search-input" placeholder="Search by employee or operation...">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search by employee, job or operation...">
+          <select id="jobFilter" class="date-filter">
+            <option value="all">All Job Numbers</option>
+          </select>
           <select id="dateFilter" class="date-filter">
             <option value="all">All Dates</option>
           </select>
@@ -677,6 +894,8 @@
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Job No.</th>
+                <th>Item</th>
                 <th>Employee</th>
                 <th>Operation</th>
                 <th>Pieces</th>
@@ -689,7 +908,10 @@
         </div>
 
         <div class="table-header" style="margin-top:15px;">
-          <button class="export-btn admin-only-col" id="exportAllBtn" onclick="exportAllCSV()" style="margin-left:0;">📥 Export All Data (CSV)</button>
+          <span>
+            <button class="export-btn admin-only-col" id="exportAllBtn" onclick="exportAllCSV()" style="margin-left:0;">📥 Export All Data (CSV)</button>
+            <button class="export-btn admin-only-col" id="exportLineBtn" onclick="exportLineCSV()">📦 Export Line Records (CSV)</button>
+          </span>
           <button class="delete-btn admin-only-col" id="deleteAllBtn" onclick="deleteAllRecords()" style="margin-left:10px;">🗑️ Delete All Records</button>
         </div>
       </div>
@@ -732,21 +954,53 @@
         el.style.display = admin ? '' : 'none';
       });
       
-      // Date input: only admin can change it; everyone else sees it as disabled (auto-set)
-      const dateInput = document.getElementById('dateInput');
-      if (admin) {
-        dateInput.disabled = false;
-        dateInput.style.background = '#fff';
-        dateInput.style.cursor = 'pointer';
-      } else {
-        dateInput.disabled = true;
-        dateInput.style.background = '#e9ecef';
-        dateInput.style.cursor = 'not-allowed';
-      }
+      // Line Balance: calculated automatically; only admin can overwrite it
+      const balBox = document.getElementById('lineBalanceInput');
+      balBox.readOnly = !admin;
+      balBox.tabIndex = admin ? 0 : -1;
+      balBox.style.cursor = admin ? 'text' : 'not-allowed';
+      balBox.title = admin ? 'Calculated automatically - you can type a different value' : 'Calculated automatically (Line Input − Line Output)';
+
+      // Date inputs: only admin can change them; everyone else sees them as disabled (auto-set)
+      ['dateInput', 'lineDateInput'].forEach(id => {
+        const dateInput = document.getElementById(id);
+        if (admin) {
+          dateInput.disabled = false;
+          dateInput.style.background = '#fff';
+          dateInput.style.cursor = 'pointer';
+        } else {
+          dateInput.disabled = true;
+          dateInput.style.background = '#e9ecef';
+          dateInput.style.cursor = 'not-allowed';
+        }
+      });
     }
     let loginTime = null;
     let allEmployees = {};
     let allRecords = [];
+    let allJobFiles = {};        // job_files from the ApparelFlow Job File portal
+    let allLineRecords = [];     // job_line_records: line input / output / packing balance per job
+    let currentJobOps = [];      // operations listed in the Operation dropdown
+    let listenersStarted = false;
+
+    const NO_JOB = 'No Job Number';
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    // Local date as YYYY-MM-DD (toISOString() uses UTC, which is the previous day before 5:30 AM in Sri Lanka)
+    function localToday() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    // Firebase returns arrays for 0,1,2... keys - accept both shapes
+    function toList(v) {
+      if (!v) return [];
+      return Array.isArray(v) ? v.filter(Boolean) : Object.values(v).filter(Boolean);
+    }
+    function jobOps(job) {
+      return toList(job.operations).sort((a, b) => (Number(a.seq) || 0) - (Number(b.seq) || 0));
+    }
 
     // Make functions global
     window.login = login;
@@ -755,6 +1009,9 @@
     window.deleteRecord = deleteRecord;
     window.deleteAllRecords = deleteAllRecords;
     window.exportAllCSV = exportAllCSV;
+    window.addLineRecord = addLineRecord;
+    window.deleteLineRecord = deleteLineRecord;
+    window.exportLineCSV = exportLineCSV;
 
     // ----- LOGIN -----
     async function login() {
@@ -810,7 +1067,275 @@
       }
     }
 
+    // ----- JOB FILES (live from the Job File portal) -----
+    function setupJobFilesListener() {
+      onValue(ref(database, 'job_files'), (snapshot) => {
+        allJobFiles = snapshot.exists() ? (snapshot.val() || {}) : {};
+        populateJobSelect();
+        populateJobFilter();
+        updateOperationSummary();
+      }, (err) => {
+        console.error(err);
+        document.getElementById('jobSelect').innerHTML = '<option value="">Could not load job numbers</option>';
+      });
+    }
+
+    function jobNumbers() {
+      const nums = new Set();
+      Object.values(allJobFiles).forEach(j => { if (j && j.job_number) nums.add(String(j.job_number).trim()); });
+      return [...nums].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }
+
+    function populateJobSelect() {
+      const select = document.getElementById('jobSelect');
+      const current = select.value;
+      const nums = jobNumbers();
+      select.innerHTML = nums.length
+        ? '<option value="">Select job number</option>' + nums.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('')
+        : '<option value="">No job files yet - create them in ApparelFlow &gt; Job File</option>';
+      if (nums.includes(current)) select.value = current;
+      populateOperationSelect();
+      renderLineSection();
+    }
+
+    // Operation dropdown: ONLY the operations saved under the selected job number
+    function populateOperationSelect() {
+      const jobNo = document.getElementById('jobSelect').value;
+      const opSelect = document.getElementById('operationSelect');
+      const hint = document.getElementById('jobHint');
+      const previous = opSelect.value;
+      currentJobOps = [];
+      if (!jobNo) {
+        opSelect.innerHTML = '<option value="">Select a job number first</option>';
+        opSelect.disabled = true;
+        hint.style.display = 'none';
+        return;
+      }
+      const jobs = Object.entries(allJobFiles)
+        .filter(([, j]) => j && String(j.job_number).trim() === jobNo)
+        .sort((a, b) => String(a[1].item_name).localeCompare(String(b[1].item_name)));
+      let html = '<option value="">Select operation</option>';
+      jobs.forEach(([key, j]) => {
+        const ops = jobOps(j);
+        const opts = ops.map(o => {
+          currentJobOps.push({ jobKey: key, jobNumber: jobNo, itemName: j.item_name || '', operation: o.operation_name || '',
+            machineType: o.machine_type || '', seq: Number(o.seq) || 0 });
+          const i = currentJobOps.length - 1;
+          return `<option value="${i}">${esc(o.seq ? o.seq + '. ' : '')}${esc(o.operation_name)}${o.machine_type ? ' (' + esc(o.machine_type) + ')' : ''}</option>`;
+        }).join('');
+        html += jobs.length > 1 ? `<optgroup label="${esc(j.item_name)}">${opts}</optgroup>` : opts;
+      });
+      opSelect.innerHTML = html;
+      opSelect.disabled = currentJobOps.length === 0;
+      if (!currentJobOps.length) opSelect.innerHTML = '<option value="">No operations saved for this job</option>';
+      if (previous !== '' && currentJobOps[previous]) opSelect.value = previous;
+      const items = jobs.map(([, j]) => j.item_name).filter(Boolean);
+      hint.innerHTML = `<b>${esc(jobNo)}</b> &nbsp;•&nbsp; Item${items.length > 1 ? 's' : ''}: ${esc(items.join(', ')) || '-'} &nbsp;•&nbsp; ${currentJobOps.length} operation(s) in the job file`;
+      hint.style.display = 'block';
+    }
+
+    function populateJobFilter() {
+      const filter = document.getElementById('jobFilter');
+      const current = filter.value;
+      const nums = new Set(jobNumbers());
+      allRecords.forEach(r => nums.add(r.jobNumber || NO_JOB));
+      const list = [...nums].sort((a, b) => a === NO_JOB ? 1 : b === NO_JOB ? -1 : a.localeCompare(b, undefined, { numeric: true }));
+      filter.innerHTML = '<option value="all">All Job Numbers</option>' + list.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      if ([...filter.options].some(o => o.value === current)) filter.value = current;
+    }
+
+    // ----- LINE RECORDS (line input / output / packing balance per job) -----
+    function setupLineRecordsListener() {
+      onValue(ref(database, 'job_line_records'), (snapshot) => {
+        allLineRecords = [];
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            const r = child.val() || {};
+            r.id = child.key;
+            r.lineInput = Number(r.lineInput) || 0;
+            r.lineOutput = Number(r.lineOutput) || 0;
+            r.lineBalance = r.lineBalance === undefined || r.lineBalance === null || r.lineBalance === '' ? null : Number(r.lineBalance);
+            r.packingBalance = r.packingBalance === null || r.packingBalance === undefined || r.packingBalance === '' ? null : Number(r.packingBalance);
+            allLineRecords.push(r);
+          });
+          allLineRecords.sort((a, b) => String(b.recordedAt).localeCompare(String(a.recordedAt)));
+        }
+        renderLineSection();
+        updateOperationSummary();
+      }, (err) => console.error(err));
+    }
+
+    function lineTotals(records) {
+      const input = records.reduce((a, r) => a + r.lineInput, 0);
+      const output = records.reduce((a, r) => a + r.lineOutput, 0);
+      const withPacking = records.filter(r => r.packingBalance !== null);   // newest first
+      const balance = records.reduce((a, r) => a + recBalance(r), 0);
+      return { input, output, balance, packing: withPacking.length ? withPacking[0].packingBalance : null, count: records.length };
+    }
+
+    let lineBalanceEdited = false;   // true when an admin typed their own Line Balance
+
+    function setBalanceNote() {
+      const box = document.getElementById('lineBalanceInput');
+      const note = document.getElementById('lineBalanceNote');
+      const v = parseInt(box.value);
+      box.classList.toggle('negative', !isNaN(v) && v < 0);
+      box.classList.toggle('edited', lineBalanceEdited);
+      note.textContent = lineBalanceEdited ? 'Edited by admin (auto value replaced)' : 'Auto: Input − Output';
+      note.style.color = lineBalanceEdited ? '#8a5a00' : '#888';
+    }
+
+    // Recalculate whenever Line Input / Line Output change (this also replaces an earlier manual edit)
+    function updateLineBalancePreview() {
+      const inp = document.getElementById('lineInputInput').value;
+      const out = document.getElementById('lineOutputInput').value;
+      const box = document.getElementById('lineBalanceInput');
+      lineBalanceEdited = false;
+      box.value = (inp === '' && out === '') ? '' : (parseInt(inp) || 0) - (parseInt(out) || 0);
+      setBalanceNote();
+    }
+
+    function onLineBalanceTyped() {
+      if (!isAdmin()) { updateLineBalancePreview(); return; }
+      const inp = document.getElementById('lineInputInput').value;
+      const out = document.getElementById('lineOutputInput').value;
+      const auto = (inp === '' && out === '') ? '' : String((parseInt(inp) || 0) - (parseInt(out) || 0));
+      lineBalanceEdited = document.getElementById('lineBalanceInput').value !== auto;
+      setBalanceNote();
+    }
+
+    // Saved balance: the stored value (may be an admin edit), else Input − Output
+    function recBalance(r) {
+      return Number.isFinite(r.lineBalance) ? r.lineBalance : r.lineInput - r.lineOutput;
+    }
+
+    function renderLineSection() {
+      const jobNo = document.getElementById('jobSelect').value;
+      const stats = document.getElementById('lineStats');
+      const wrap = document.getElementById('lineEntriesWrap');
+      if (!jobNo) { stats.innerHTML = ''; wrap.style.display = 'none'; return; }
+      const jobRecs = allLineRecords.filter(r => r.jobNumber === jobNo);
+      const today = localToday();
+      const t = lineTotals(jobRecs.filter(r => r.date === today));
+      const all = lineTotals(jobRecs);
+      const stat = (label, value, sub, neg) => `<div class="line-stat"><div class="label">${label}</div>
+        <div class="value ${neg ? 'neg' : ''}">${value}</div><div class="sub">${sub}</div></div>`;
+      stats.innerHTML =
+        stat('Line Input', all.input, `Today: ${t.input}`) +
+        stat('Line Output', all.output, `Today: ${t.output}`) +
+        stat('Line Balance', all.balance, `Today: ${t.balance}`, all.balance < 0) +
+        stat('Packing Balance', all.packing === null ? '-' : all.packing, 'Latest entry') +
+        stat('Line Entries', all.count, `Today: ${t.count}`);
+      const admin = isAdmin();
+      const rows = jobRecs.slice(0, 25);
+      wrap.style.display = rows.length ? 'block' : 'none';
+      document.getElementById('lineEntriesBody').innerHTML = rows.map(r => {
+        const bal = recBalance(r);
+        const time = r.recordedAt ? new Date(r.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+        return `<tr>
+          <td>${esc(new Date(r.date).toLocaleDateString())}</td><td>${esc(time)}</td>
+          <td>${r.lineInput}</td><td>${r.lineOutput}</td><td class="${bal < 0 ? 'neg' : ''}">${bal}${r.lineBalanceManual ? ' <small title="Edited by admin" style="color:#8a5a00">✎</small>' : ''}</td>
+          <td>${r.packingBalance === null ? '-' : r.packingBalance}</td><td>${esc(r.recordedByName || r.recordedBy || '-')}</td>
+          ${admin ? `<td><button class="delete-btn" onclick="deleteLineRecord('${esc(r.id)}')">Delete</button></td>` : ''}
+        </tr>`;
+      }).join('');
+      document.querySelectorAll('#lineEntriesWrap .admin-only-col').forEach(el => { el.style.display = admin ? '' : 'none'; });
+    }
+
+    function onJobChange() {
+      populateOperationSelect();
+      renderLineSection();
+      document.getElementById('lineMessage').innerHTML = '';
+    }
+
+    async function addLineRecord() {
+      const jobNumber = document.getElementById('jobSelect').value;
+      const date = document.getElementById('lineDateInput').value;
+      const inRaw = document.getElementById('lineInputInput').value;
+      const outRaw = document.getElementById('lineOutputInput').value;
+      const packRaw = document.getElementById('packingBalanceInput').value;
+      const msg = document.getElementById('lineMessage');
+      if (!jobNumber) { msg.innerHTML = '<div class="error-message">Please select a Job Number first.</div>'; return; }
+      if (!date) { msg.innerHTML = '<div class="error-message">Please select a date.</div>'; return; }
+      const lineInput = parseInt(inRaw), lineOutput = parseInt(outRaw);
+      if (inRaw === '' || outRaw === '' || isNaN(lineInput) || isNaN(lineOutput) || lineInput < 0 || lineOutput < 0) {
+        msg.innerHTML = '<div class="error-message">Enter Line Input and Line Output (0 or more).</div>'; return;
+      }
+      let lineBalance = lineInput - lineOutput;
+      let lineBalanceManual = false;
+      if (isAdmin() && lineBalanceEdited) {
+        const typed = document.getElementById('lineBalanceInput').value.trim();
+        if (typed === '' || !/^-?\d+$/.test(typed)) {
+          msg.innerHTML = '<div class="error-message">Line Balance must be a whole number (it can be negative).</div>'; return;
+        }
+        lineBalance = parseInt(typed);
+        lineBalanceManual = lineBalance !== lineInput - lineOutput;
+      }
+      const packingBalance = packRaw === '' ? null : parseInt(packRaw);
+      if (packingBalance !== null && (isNaN(packingBalance) || packingBalance < 0)) {
+        msg.innerHTML = '<div class="error-message">Packing Balance must be 0 or more.</div>'; return;
+      }
+      const items = Object.values(allJobFiles).filter(j => j && String(j.job_number).trim() === jobNumber).map(j => j.item_name).filter(Boolean);
+      const record = {
+        jobNumber,
+        itemNames: items.join(', '),
+        date,
+        lineInput,
+        lineOutput,
+        lineBalance,                             // Input − Output, or the admin's edited value
+        lineBalanceManual,
+        packingBalance,
+        recordedAt: new Date().toISOString(),
+        recordedBy: currentEmployee.id,
+        recordedByName: currentEmployee.name || ''
+      };
+      try {
+        const newRef = push(ref(database, 'job_line_records'));
+        await set(newRef, record);
+        msg.innerHTML = `<div class="success-message">Line entry saved for ${esc(jobNumber)} (Balance ${record.lineBalance}${lineBalanceManual ? ', edited' : ''}).</div>`;
+        ['lineInputInput', 'lineOutputInput', 'packingBalanceInput'].forEach(id => { document.getElementById(id).value = ''; });
+        updateLineBalancePreview();
+      } catch (e) {
+        console.error(e);
+        msg.innerHTML = '<div class="error-message">Failed to save line entry.</div>';
+      }
+    }
+
+    async function deleteLineRecord(id) {
+      if (!isAdmin()) { alert('Only Admin users can delete line entries.'); return; }
+      if (!confirm('Delete this line entry?')) return;
+      try {
+        await remove(ref(database, `job_line_records/${id}`));
+      } catch (e) {
+        alert('Delete failed');
+        console.error(e);
+      }
+    }
+
+    function exportLineCSV() {
+      if (!isAdmin()) { alert('Only Admin users can export data.'); return; }
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const lines = ['Date,Job Number,Items,Line Input,Line Output,Line Balance,Balance Edited,Packing Balance,Entered By,Recorded At'];
+      allLineRecords.forEach(r => {
+        lines.push([r.date, q(r.jobNumber), q(r.itemNames || ''), r.lineInput, r.lineOutput, recBalance(r), r.lineBalanceManual ? 'Yes' : 'No',
+          r.packingBalance === null ? '' : r.packingBalance, q(r.recordedByName || r.recordedBy || ''), q(r.recordedAt || '')].join(','));
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `line_records_${localToday()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     function setupRealtimeListener() {
+      if (listenersStarted) return;
+      listenersStarted = true;
+      setupJobFilesListener();
+      setupLineRecordsListener();
       const recordsRef = ref(database, 'productivity_records');
       onValue(recordsRef, (snapshot) => {
         allRecords = [];
@@ -827,6 +1352,7 @@
         }
         // Update all UI components
         populateDateFilter();
+        populateJobFilter();
         displayRecords(allRecords);
         updateTotals();
         updateOperationSummary();
@@ -871,12 +1397,21 @@
       const todayStr = `${year}-${month}-${day}`;
       const dateInput = document.getElementById('dateInput');
       dateInput.value = todayStr;
+      document.getElementById('lineDateInput').value = todayStr;
 
       updateTimeDisplay();
-      setInterval(updateTimeDisplay, 1000);
+      if (!window.__clockStarted) { window.__clockStarted = true; setInterval(updateTimeDisplay, 1000); }
 
-      document.getElementById('searchInput').addEventListener('input', filterRecords);
-      document.getElementById('dateFilter').addEventListener('change', filterRecords);
+      if (!window.__filtersBound) {
+        window.__filtersBound = true;
+        document.getElementById('searchInput').addEventListener('input', filterRecords);
+        document.getElementById('dateFilter').addEventListener('change', filterRecords);
+        document.getElementById('jobFilter').addEventListener('change', filterRecords);
+        document.getElementById('jobSelect').addEventListener('change', onJobChange);
+        document.getElementById('lineInputInput').addEventListener('input', updateLineBalancePreview);
+        document.getElementById('lineOutputInput').addEventListener('input', updateLineBalancePreview);
+        document.getElementById('lineBalanceInput').addEventListener('input', onLineBalanceTyped);
+      }
     }
 
     function updateTimeDisplay() {
@@ -896,16 +1431,27 @@
     // ----- ADD RECORD -----
     async function addProductivity() {
       const employeeId = document.getElementById('employeeSelect').value;
+      const jobNumber = document.getElementById('jobSelect').value;
       const date = document.getElementById('dateInput').value;
-      const operation = document.getElementById('operationSelect').value.trim();
       const interval = document.getElementById('intervalSelect').value;
+      const opIndex = document.getElementById('operationSelect').value;
+      const op = opIndex === '' ? null : currentJobOps[Number(opIndex)];
       const pieces = parseInt(document.getElementById('piecesInput').value);
       const msgDiv = document.getElementById('productivityMessage');
 
-      if (!employeeId || !date || !operation || !interval || isNaN(pieces) || pieces < 0) {
+      if (!jobNumber) {
+        msgDiv.innerHTML = '<div class="error-message">Please select a Job Number at the top first.</div>';
+        return;
+      }
+      if (!op) {
+        msgDiv.innerHTML = '<div class="error-message">Please select an Operation from the job file.</div>';
+        return;
+      }
+      if (!employeeId || !date || !interval || isNaN(pieces) || pieces < 0) {
         msgDiv.innerHTML = '<div class="error-message">Please fill all fields correctly.</div>';
         return;
       }
+      const operation = op.operation;
 
       const employee = allEmployees[employeeId];
       if (!employee) {
@@ -916,8 +1462,13 @@
       const record = {
         employeeId,
         employeeName: employee.name,
-        date,
+        jobNumber,
+        itemName: op.itemName,
+        jobFileKey: op.jobKey,
         operation,
+        operationSeq: op.seq,
+        machineType: op.machineType,
+        date,
         pieces,
         timeInterval: interval,
         recordedAt: new Date().toISOString(),
@@ -927,10 +1478,11 @@
       try {
         const newRef = push(ref(database, 'productivity_records'));
         await set(newRef, record);
-        msgDiv.innerHTML = `<div class="success-message">Record added!</div>`;
+        msgDiv.innerHTML = `<div class="success-message">Record added! (${esc(jobNumber)} - ${esc(operation)}: ${pieces} pcs)</div>`;
         document.getElementById('piecesInput').value = '';
         document.getElementById('operationSelect').value = '';
         document.getElementById('intervalSelect').value = '';
+        // Job Number is kept selected for the next entry
         // The real-time listener will update the UI automatically
       } catch (e) {
         console.error(e);
@@ -962,22 +1514,27 @@
       // Apply current filters
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const dateFilter = document.getElementById('dateFilter').value;
+      const jobFilter = document.getElementById('jobFilter').value;
       
       const filtered = records.filter(r => {
-        const matchSearch = r.employeeName.toLowerCase().includes(searchTerm) || r.operation.toLowerCase().includes(searchTerm);
+        const text = `${r.employeeName || ''} ${r.operation || r.taskType || ''} ${r.jobNumber || ''} ${r.itemName || ''}`.toLowerCase();
+        const matchSearch = text.includes(searchTerm);
         const matchDate = dateFilter === 'all' || r.date === dateFilter;
-        return matchSearch && matchDate;
+        const matchJob = jobFilter === 'all' || (r.jobNumber || NO_JOB) === jobFilter;
+        return matchSearch && matchDate && matchJob;
       });
       
       const admin = isAdmin();
       filtered.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${new Date(r.date).toLocaleDateString()}</td>
-          <td>${r.employeeName}</td>
-          <td>${r.operation}</td>
+          <td>${esc(new Date(r.date).toLocaleDateString())}</td>
+          <td>${esc(r.jobNumber || '-')}</td>
+          <td>${esc(r.itemName || '-')}</td>
+          <td>${esc(r.employeeName)}</td>
+          <td>${esc(r.operation || r.taskType || '-')}</td>
           <td>${r.pieces}</td>
-          <td>${r.timeInterval || '-'}</td>
+          <td>${esc(r.timeInterval || '-')}</td>
           ${admin ? `<td><button class="delete-btn" onclick="deleteRecord('${r.id}')">Delete</button></td>` : ''}
         `;
         tbody.appendChild(tr);
@@ -989,37 +1546,65 @@
     }
 
     function updateTotals() {
-      const today = new Date().toISOString().split('T')[0];
+      const today = localToday();
       const todayRecords = allRecords.filter(r => r.date === today);
       const totalPieces = todayRecords.reduce((sum, r) => sum + r.pieces, 0);
       document.getElementById('totalPieces').textContent = totalPieces;
     }
 
-    // ----- OPERATION SUMMARY (today) -----
+    // ----- OPERATION SUMMARY (today) - one block per Job Number -----
     function updateOperationSummary() {
-      const today = new Date().toISOString().split('T')[0];
+      const today = localToday();
       const todayRecords = allRecords.filter(r => r.date === today);
-      const summary = {};
-      todayRecords.forEach(r => {
-        if (!summary[r.operation]) summary[r.operation] = { pieces: 0 };
-        summary[r.operation].pieces += r.pieces;
-      });
-
+      const todayLines = allLineRecords.filter(r => r.date === today);
       const container = document.getElementById('operationSummary');
       container.innerHTML = '';
-      const sortedOps = Object.keys(summary).sort();
-      if (sortedOps.length === 0) {
+      container.style.display = 'block';
+      if (todayRecords.length === 0 && todayLines.length === 0) {
         container.innerHTML = '<div class="summary-item"><span class="label">No records today</span></div>';
         return;
       }
-      sortedOps.forEach(op => {
-        const div = document.createElement('div');
-        div.className = 'summary-item';
-        div.innerHTML = `
-          <div class="label">${op}</div>
-          <div class="value">${summary[op].pieces} pcs</div>
-        `;
-        container.appendChild(div);
+      const byJob = {};
+      todayRecords.forEach(r => {
+        const job = r.jobNumber || NO_JOB;
+        const j = byJob[job] ||= { pieces: 0, items: new Set(), employees: new Set(), ops: {} };
+        j.pieces += r.pieces;
+        if (r.itemName) j.items.add(r.itemName);
+        if (r.employeeName) j.employees.add(r.employeeName);
+        const opName = r.operation || r.taskType || 'Unknown';
+        const key = `${r.itemName || ''}|${opName}`;
+        const o = j.ops[key] ||= { name: opName, item: r.itemName || '', machine: r.machineType || '', seq: Number(r.operationSeq) || 999, pieces: 0 };
+        o.pieces += r.pieces;
+      });
+      todayLines.forEach(r => { byJob[r.jobNumber || NO_JOB] ||= { pieces: 0, items: new Set(), employees: new Set(), ops: {} }; });
+      const jobs = Object.keys(byJob).sort((a, b) => a === NO_JOB ? 1 : b === NO_JOB ? -1 : a.localeCompare(b, undefined, { numeric: true }));
+      jobs.forEach(job => {
+        const j = byJob[job];
+        const multiItem = j.items.size > 1;
+        const ops = Object.values(j.ops).sort((a, b) => a.item.localeCompare(b.item) || a.seq - b.seq || a.name.localeCompare(b.name));
+        const block = document.createElement('div');
+        block.className = 'job-summary-block';
+        block.innerHTML = `
+          <div class="job-summary-head">
+            <span class="job-title">${esc(job)}</span>
+            <span class="job-meta">${j.items.size ? esc([...j.items].join(', ')) + ' • ' : ''}${j.employees.size} employee(s) • <b>${j.pieces} pcs</b></span>
+          </div>
+          ${(() => {
+            const lr = todayLines.filter(r => (r.jobNumber || NO_JOB) === job);
+            if (!lr.length) return '';
+            const t = lineTotals(lr);
+            return `<div class="summary-line">📦 Line In <b>${t.input}</b> • Line Out <b>${t.output}</b> • Line Balance <b class="${t.balance < 0 ? 'neg' : ''}">${t.balance}</b>${t.packing === null ? '' : ` • Packing Balance <b>${t.packing}</b>`}</div>`;
+          })()}
+          <div class="summary-grid">
+            ${ops.length ? '' : '<div class="summary-item"><span class="label">No operation records today</span></div>'}
+            ${ops.map(o => `
+              <div class="summary-item">
+                <div class="label">${esc(o.name)}${multiItem && o.item ? ' <small>(' + esc(o.item) + ')</small>' : ''}</div>
+                <div class="value">${o.pieces} pcs</div>
+                ${o.machine ? `<div class="machine">${esc(o.machine)}</div>` : ''}
+              </div>`).join('')}
+          </div>`;
+        container.appendChild(block);
       });
     }
 
@@ -1072,11 +1657,12 @@
         alert('Only Admin users can export data.');
         return;
       }
-      const today = new Date().toISOString().split('T')[0];
-      const q = v => `"${String(v).replace(/"/g, '""')}"`;
-      const lines = ['Date,Employee,Operation,Pieces,Time Interval'];
+      const today = localToday();
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const lines = ['Date,Job Number,Item,Employee,Operation,Machine Type,Pieces,Time Interval'];
       allRecords.forEach(r => {
-        lines.push([r.date, q(r.employeeName), q(r.operation), r.pieces, q(r.timeInterval || '')].join(','));
+        lines.push([r.date, q(r.jobNumber || ''), q(r.itemName || ''), q(r.employeeName), q(r.operation || r.taskType || ''),
+          q(r.machineType || ''), r.pieces, q(r.timeInterval || '')].join(','));
       });
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -1096,6 +1682,7 @@
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
       document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+      document.getElementById('lineDateInput').value = `${year}-${month}-${day}`;
     });
 
   </script>
